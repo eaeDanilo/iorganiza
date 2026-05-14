@@ -1,0 +1,70 @@
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { translateAuthError } from '@/lib/auth-errors';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const search = useSearchParams();
+  const supabase = createSupabaseBrowserClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get('email'));
+    const password = String(fd.get('password'));
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      setError(translateAuthError(error.message));
+      return;
+    }
+    const redirect = search.get('redirect') || '/dashboard';
+    router.push(redirect);
+    router.refresh();
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Entrar</CardTitle>
+        <CardDescription>Acesse seu dashboard iOrganiza.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name="email" type="email" required />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Senha</Label>
+              <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
+                Esqueci a senha
+              </Link>
+            </div>
+            <Input id="password" name="password" type="password" required />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </Button>
+        </form>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Não tem conta?{' '}
+          <Link href="/auth/signup" className="text-primary hover:underline">Cadastre-se</Link>
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
