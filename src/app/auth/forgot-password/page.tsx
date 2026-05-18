@@ -9,7 +9,6 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
 
 export default function ForgotPasswordPage() {
-  const supabase = createSupabaseBrowserClient();
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +19,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get('email'));
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     });

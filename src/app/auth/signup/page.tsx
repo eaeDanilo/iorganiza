@@ -9,7 +9,6 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
 
 export default function SignupPage() {
-  const supabase = createSupabaseBrowserClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -22,6 +21,7 @@ export default function SignupPage() {
     const email = String(fd.get('email'));
     const password = String(fd.get('password'));
     const fullName = String(fd.get('full_name'));
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signUp({
       email,
       password,

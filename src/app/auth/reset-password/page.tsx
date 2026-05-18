@@ -10,7 +10,6 @@ import { translateAuthError } from '@/lib/auth-errors';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +30,7 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) {
