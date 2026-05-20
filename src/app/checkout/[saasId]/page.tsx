@@ -53,8 +53,8 @@ export default async function CheckoutPage({
         metadata: { user_id: user!.id, saas_id: saas!.id },
       });
       sessionUrl = session.url;
-    } catch {
-      // intentionally empty — redirect below handles the error case
+    } catch (err) {
+      console.error('[checkout] createCheckoutSession failed:', err);
     }
     if (!sessionUrl) {
       redirect(`/checkout/${saas!.id}?error=stripe_error`);
