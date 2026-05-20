@@ -7,7 +7,18 @@ import { createCheckoutSession } from '@/lib/stripe';
 import { formatCurrency, getAppUrl } from '@/lib/utils';
 import type { Saas, Subscription } from '@/types/database';
 
-export default async function CheckoutPage({ params }: { params: { saasId: string } }) {
+const ERROR_MESSAGES: Record<string, string> = {
+  not_configured: 'Este produto ainda não está disponível para compra. Tente novamente em breve.',
+  stripe_error: 'Erro ao iniciar pagamento. Tente novamente ou entre em contato com o suporte.',
+};
+
+export default async function CheckoutPage({
+  params,
+  searchParams,
+}: {
+  params: { saasId: string };
+  searchParams: { error?: string; canceled?: string };
+}) {
   const user = await getCurrentUser();
   if (!user) redirect(`/auth/login?redirect=/checkout/${params.saasId}`);
 
@@ -17,7 +28,6 @@ export default async function CheckoutPage({ params }: { params: { saasId: strin
   if (!saas) notFound();
   if (saas.status !== 'active') redirect('/catalogo');
 
-  // Check existing subscription
   const { data: existing } = await supabase
     .from('subscriptions')
     .select('id, status')
@@ -26,19 +36,30 @@ export default async function CheckoutPage({ params }: { params: { saasId: strin
     .maybeSingle();
   const existingSub = existing as Pick<Subscription, 'id' | 'status'> | null;
 
+  const errorMsg = searchParams.error ? (ERROR_MESSAGES[searchParams.error] ?? ERROR_MESSAGES.stripe_error) : null;
+
   async function startCheckout() {
     'use server';
     if (!saas!.stripe_price_id) {
-      throw new Error('SaaS sem stripe_price_id configurado.');
+      redirect(`/checkout/${saas!.id}?error=not_configured`);
     }
-    const session = await createCheckoutSession({
-      priceId: saas!.stripe_price_id,
-      customerEmail: user!.email,
-      successUrl: `${getAppUrl()}/dashboard?checkout=success&saas=${saas!.slug}`,
-      cancelUrl: `${getAppUrl()}/checkout/${saas!.id}?canceled=1`,
-      metadata: { user_id: user!.id, saas_id: saas!.id },
-    });
-    redirect(session.url!);
+    let sessionUrl: string | null = null;
+    try {
+      const session = await createCheckoutSession({
+        priceId: saas!.stripe_price_id!,
+        customerEmail: user!.email,
+        successUrl: `${getAppUrl()}/dashboard?checkout=success&saas=${saas!.slug}`,
+        cancelUrl: `${getAppUrl()}/checkout/${saas!.id}?canceled=1`,
+        metadata: { user_id: user!.id, saas_id: saas!.id },
+      });
+      sessionUrl = session.url;
+    } catch {
+      // intentionally empty — redirect below handles the error case
+    }
+    if (!sessionUrl) {
+      redirect(`/checkout/${saas!.id}?error=stripe_error`);
+    }
+    redirect(sessionUrl);
   }
 
   return (
@@ -51,6 +72,16 @@ export default async function CheckoutPage({ params }: { params: { saasId: strin
           {existingSub && (existingSub.status === 'active' || existingSub.status === 'pending') && (
             <div className="mb-4 rounded-md border border-success bg-success/10 p-3 text-sm">
               Você já possui assinatura ({existingSub.status}). Gerencie em Faturamento.
+            </div>
+          )}
+          {errorMsg && (
+            <div className="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+              {errorMsg}
+            </div>
+          )}
+          {searchParams.canceled && !errorMsg && (
+            <div className="mb-4 rounded-md border border-border bg-surface p-3 text-sm text-muted-foreground">
+              Pagamento cancelado. Você pode tentar novamente quando quiser.
             </div>
           )}
           <p className="mb-2 text-muted-foreground">{saas.description}</p>
