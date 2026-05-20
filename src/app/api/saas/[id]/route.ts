@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';

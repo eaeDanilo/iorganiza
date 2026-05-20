@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { requireAdmin } from '@/lib/auth';
 import { handleError, jsonOk } from '@/lib/api';
 
