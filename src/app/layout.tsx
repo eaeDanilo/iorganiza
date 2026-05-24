@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`dark ${jakarta.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
+        <script dangerouslySetInnerHTML={{ __html: `document.addEventListener('touchmove',function(e){if(e.scale!==1)e.preventDefault();},{passive:false});` }} />
         {children}
       </body>
     </html>
