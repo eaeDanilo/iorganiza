@@ -14,12 +14,12 @@ export default async function WebhooksPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Webhooks</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Webhooks</h1>
       <p className="mt-1 text-muted-foreground">Últimos 100 webhooks recebidos.</p>
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Logs</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

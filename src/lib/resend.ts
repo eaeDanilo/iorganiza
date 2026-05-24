@@ -12,7 +12,7 @@ export function getResend(): Resend {
 }
 
 export function fromEmail(): string {
-  return process.env.RESEND_FROM_EMAIL || 'no-reply@iorganiza.com';
+  return process.env.RESEND_FROM_EMAIL || 'no-reply@iorganiza.com.br';
 }
 
 export async function sendEmail(opts: { to: string; subject: string; html: string }) {

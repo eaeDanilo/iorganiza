@@ -6,8 +6,7 @@ export function getStripe(): Stripe {
   if (!_stripe) {
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) throw new Error('STRIPE_SECRET_KEY not set');
-    // apiVersion omitido — usa o default vinculado à conta. Evita drift de tipos do SDK.
-    _stripe = new Stripe(key);
+      _stripe = new Stripe(key, { apiVersion: '2025-02-24.acacia' });
   }
   return _stripe;
 }
@@ -22,7 +21,6 @@ export async function createCheckoutSession(opts: {
   const stripe = getStripe();
   return stripe.checkout.sessions.create({
     mode: 'subscription',
-    payment_method_types: ['card'],
     line_items: [{ price: opts.priceId, quantity: 1 }],
     customer_email: opts.customerEmail,
     success_url: opts.successUrl,

@@ -17,6 +17,8 @@ const updateSchema = z.object({
   status: z.enum(['active', 'inactive']).optional(),
   stripe_product_id: z.string().nullable().optional(),
   stripe_price_id: z.string().nullable().optional(),
+  trial_enabled: z.boolean().optional(),
+  trial_max_uses: z.number().int().nonnegative().optional(),
 });
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {

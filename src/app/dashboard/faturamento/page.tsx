@@ -21,7 +21,7 @@ export default async function FaturamentoPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Faturamento</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Faturamento</h1>
       <p className="mt-1 text-muted-foreground">Histórico de pagamentos e cobranças.</p>
 
       <Card className="mt-6">
@@ -30,32 +30,57 @@ export default async function FaturamentoPage() {
           {payments.length === 0 ? (
             <p className="text-center text-muted-foreground">Nenhum pagamento registrado.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>SaaS</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Sistema</TableHead>
+                      <TableHead>Método</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((p) => (
+                      <TableRow key={p.id}>
+                        <TableCell>{formatDate(p.created_at, true)}</TableCell>
+                        <TableCell>{p.subscription?.saas?.name ?? '—'}</TableCell>
+                        <TableCell>{paymentMethodLabel[p.payment_method]}</TableCell>
+                        <TableCell>
+                          <Badge variant={p.status === 'succeeded' ? 'success' : p.status === 'pending' ? 'outline' : 'destructive'}>
+                            {paymentStatusLabel[p.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(Number(p.amount), p.currency)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <ul className="space-y-3 md:hidden">
                 {payments.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>{formatDate(p.created_at, true)}</TableCell>
-                    <TableCell>{p.subscription?.saas?.name ?? '—'}</TableCell>
-                    <TableCell>{paymentMethodLabel[p.payment_method]}</TableCell>
-                    <TableCell>
+                  <li key={p.id} className="rounded-lg border border-border p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{p.subscription?.saas?.name ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(p.created_at, true)}</p>
+                      </div>
+                      <span className="shrink-0 font-semibold tabular-nums">
+                        {formatCurrency(Number(p.amount), p.currency)}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+                      <span className="text-muted-foreground">{paymentMethodLabel[p.payment_method]}</span>
                       <Badge variant={p.status === 'succeeded' ? 'success' : p.status === 'pending' ? 'outline' : 'destructive'}>
                         {paymentStatusLabel[p.status]}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">{formatCurrency(Number(p.amount), p.currency)}</TableCell>
-                  </TableRow>
+                    </div>
+                  </li>
                 ))}
-              </TableBody>
-            </Table>
+              </ul>
+            </>
           )}
         </CardContent>
       </Card>

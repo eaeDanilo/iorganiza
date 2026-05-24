@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
   const raw = await req.text();
   const sig = req.headers.get('x-kirvano-signature') || req.headers.get('signature') || null;
   const secret = process.env.KIRVANO_WEBHOOK_SECRET || '';
-  if (secret && !verifyHmacSha256(raw, secret, sig)) {
+  if (!secret) {
+    return NextResponse.json({ error: 'webhook secret not configured' }, { status: 500 });
+  }
+  if (!verifyHmacSha256(raw, secret, sig)) {
     return NextResponse.json({ error: 'invalid signature' }, { status: 401 });
   }
   let body: any;

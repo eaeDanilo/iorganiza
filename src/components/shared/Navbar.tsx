@@ -22,7 +22,7 @@ export async function Navbar() {
                 </Link>
               )}
               <Button asChild size="sm">
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">Painel</Link>
               </Button>
             </>
           ) : (

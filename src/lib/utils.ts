@@ -11,7 +11,7 @@ export function formatCurrency(value: number, currency = 'BRL'): string {
 
 export function formatDate(date: string | Date | null | undefined, withTime = false): string {
   if (!date) return '—';
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? new Date(date.length === 10 ? date + 'T00:00:00' : date) : date;
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',

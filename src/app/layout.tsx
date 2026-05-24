@@ -10,7 +10,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'iOrganiza Hub — Centralize seus SaaS',
+  title: 'iOrganiza — Centralize seus sistemas',
   description: 'Plataforma unificada para todos os seus sistemas de produtividade.',
 };
 

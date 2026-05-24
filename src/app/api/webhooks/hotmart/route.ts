@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
   const raw = await req.text();
   const hottok = req.headers.get('x-hotmart-hottok');
   const expected = process.env.HOTMART_WEBHOOK_SECRET;
-  if (expected && hottok !== expected) {
+  if (!expected) {
+    return NextResponse.json({ error: 'webhook secret not configured' }, { status: 500 });
+  }
+  if (hottok !== expected) {
     return NextResponse.json({ error: 'invalid hottok' }, { status: 401 });
   }
   let body: any;

@@ -32,6 +32,8 @@ export function SaasForm({ initial, mode }: Props) {
       status: fd.get('status') === 'active' ? 'active' : 'inactive',
       stripe_price_id: String(fd.get('stripe_price_id') || '') || null,
       stripe_product_id: String(fd.get('stripe_product_id') || '') || null,
+      trial_enabled: fd.get('trial_enabled') === 'on',
+      trial_max_uses: Number(fd.get('trial_max_uses') || 0),
     };
     const url = mode === 'create' ? '/api/saas' : `/api/saas/${initial?.id}`;
     const method = mode === 'create' ? 'POST' : 'PUT';
@@ -103,7 +105,7 @@ export function SaasForm({ initial, mode }: Props) {
             <Input id="external_url" name="external_url" defaultValue={initial?.external_url ?? ''} placeholder="https://app.icobra.com" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="features">Features (uma por linha)</Label>
+            <Label htmlFor="features">Funcionalidades (uma por linha)</Label>
             <Textarea id="features" name="features" rows={5} defaultValue={Array.isArray(initial?.features) ? (initial!.features as string[]).join('\n') : ''} />
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -114,6 +116,22 @@ export function SaasForm({ initial, mode }: Props) {
             <div className="space-y-2">
               <Label htmlFor="stripe_price_id">Stripe Price ID</Label>
               <Input id="stripe_price_id" name="stripe_price_id" defaultValue={initial?.stripe_price_id ?? ''} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="trial_enabled"
+                name="trial_enabled"
+                defaultChecked={initial?.trial_enabled ?? false}
+                className="h-4 w-4 rounded border border-input"
+              />
+              <Label htmlFor="trial_enabled">Habilitar teste grátis</Label>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="trial_max_uses">Usos gratuitos</Label>
+              <Input id="trial_max_uses" name="trial_max_uses" type="number" min="0" defaultValue={initial?.trial_max_uses ?? 0} />
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

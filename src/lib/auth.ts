@@ -20,3 +20,9 @@ export async function requireAdmin(): Promise<User> {
   if (!u.is_admin) throw new Error('FORBIDDEN');
   return u;
 }
+
+export async function requireSuperAdmin(): Promise<User> {
+  const u = await requireUser();
+  if (!u.is_super_admin) throw new Error('FORBIDDEN');
+  return u;
+}

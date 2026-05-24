@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       <CardHeader>
         <CardTitle>Recuperar senha</CardTitle>
         <CardDescription>
-          {sent ? 'Confira seu email para o link de reset.' : 'Informe seu email e enviaremos um link.'}
+          {sent ? 'Confira seu e-mail para o link de redefinição.' : 'Informe seu e-mail e enviaremos um link.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input id="email" name="email" type="email" required />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}

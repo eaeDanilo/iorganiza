@@ -19,13 +19,13 @@ export default async function DashboardCatalogoPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Catálogo</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Catálogo</h1>
       <p className="mt-1 text-muted-foreground">Explore novos sistemas para adicionar à sua conta.</p>
 
       {available.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-4 text-xl font-semibold">Disponíveis para você</h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className="mb-4 text-lg font-semibold sm:text-xl">Disponíveis para você</h2>
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {available.map((s) => <SaasCard key={s.id} saas={s} />)}
           </div>
         </section>
@@ -33,8 +33,8 @@ export default async function DashboardCatalogoPage() {
 
       {owned.length > 0 && (
         <section className="mt-12">
-          <h2 className="mb-4 text-xl font-semibold text-muted-foreground">Você já assina</h2>
-          <div className="grid grid-cols-1 gap-6 opacity-60 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className="mb-4 text-lg font-semibold text-muted-foreground sm:text-xl">Você já assina</h2>
+          <div className="grid grid-cols-1 gap-4 opacity-60 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
             {owned.map((s) => <SaasCard key={s.id} saas={s} />)}
           </div>
         </section>

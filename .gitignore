@@ -16,3 +16,6 @@ yarn-error.log*
 next-env.d.ts
 .swc
 coverage
+
+.vercel
+.env*.local

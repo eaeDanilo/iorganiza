@@ -68,6 +68,7 @@ export async function findSaasByExternalIdentifier(identifier: string) {
 export async function upsertSubscription(opts: {
   userId: string;
   saasId: string;
+  planId?: string | null;
   status: 'active' | 'canceled' | 'pending' | 'expired';
   paymentMethod: PaymentMethod;
   pricePaid?: number | null;
@@ -81,6 +82,7 @@ export async function upsertSubscription(opts: {
   const update: Record<string, unknown> = {
     user_id: opts.userId,
     saas_id: opts.saasId,
+    plan_id: opts.planId ?? null,
     status: opts.status,
     payment_method: opts.paymentMethod,
     price_paid: opts.pricePaid ?? null,

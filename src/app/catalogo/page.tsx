@@ -27,7 +27,7 @@ export default async function CatalogoPage() {
           </div>
           {saas.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-12 text-center">
-              <p className="text-muted-foreground">Nenhum SaaS disponível no momento.</p>
+              <p className="text-muted-foreground">Nenhum sistema disponível no momento.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

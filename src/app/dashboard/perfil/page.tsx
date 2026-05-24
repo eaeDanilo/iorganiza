@@ -69,7 +69,7 @@ export default function PerfilPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-3xl font-bold">Perfil</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Perfil</h1>
       <p className="mt-1 text-muted-foreground">Atualize seus dados e senha.</p>
 
       <Card className="mt-6">
@@ -77,7 +77,7 @@ export default function PerfilPage() {
         <CardContent>
           <form onSubmit={saveProfile} className="space-y-4">
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>E-mail</Label>
               <Input value={email} disabled />
             </div>
             <div className="space-y-2">

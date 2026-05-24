@@ -7,17 +7,17 @@ import { Zap, Shield, Layers, RefreshCw } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 
 const benefits = [
-  { icon: Zap, title: 'Tudo em um lugar', desc: 'Acesse todos os seus SaaS com um único login.' },
+  { icon: Zap, title: 'Tudo em um lugar', desc: 'Acesse todos os seus sistemas com um único login.' },
   { icon: Shield, title: 'Pagamento seguro', desc: 'Stripe, Kiwify, Hotmart e Kirvano integrados.' },
   { icon: Layers, title: 'Dados conectados', desc: 'Compartilhe dados entre sistemas que você assina.' },
   { icon: RefreshCw, title: 'Cobrança transparente', desc: 'Veja faturas, cancelamentos e renovações.' },
 ];
 
 const faqs = [
-  { q: 'Como funciona o iOrganiza?', a: 'Você cria uma conta, assina os SaaS que precisar e gerencia tudo de um único painel.' },
+  { q: 'Como funciona o iOrganiza?', a: 'Você cria uma conta, assina os sistemas que precisar e gerencia tudo de um único painel.' },
   { q: 'Posso cancelar a qualquer momento?', a: 'Sim. Acesse Faturamento e cancele com um clique. Acesso mantido até o fim do período pago.' },
   { q: 'Posso comprar fora do iOrganiza?', a: 'Sim. Você também pode comprar via Kiwify, Hotmart e Kirvano e o acesso é ativado automaticamente.' },
-  { q: 'Meus dados ficam isolados entre SaaS?', a: 'Sim. Por padrão dados são isolados. Você decide quais sistemas podem compartilhar dados entre si.' },
+  { q: 'Meus dados ficam isolados entre sistemas?', a: 'Sim. Por padrão dados são isolados. Você decide quais sistemas podem compartilhar dados entre si.' },
 ];
 
 export default async function HomePage() {
@@ -30,10 +30,10 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/10" />
           <div className="container relative">
             <h1 className="max-w-3xl text-5xl font-bold leading-tight text-foreground md:text-6xl">
-              Todos os seus SaaS em <span className="text-primary">um único lugar</span>.
+              Todos os seus sistemas em <span className="text-primary">um único lugar</span>.
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-              iOrganiza Hub centraliza login, faturamento e dados entre os sistemas que você usa. Assine só o que precisar, integre quando quiser.
+              iOrganiza centraliza acesso, faturamento e dados entre os sistemas que você usa. Assine só o que precisar, integre quando quiser.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button asChild size="lg">
@@ -41,7 +41,7 @@ export default async function HomePage() {
               </Button>
               {user ? (
                 <Button asChild size="lg" variant="outline">
-                  <Link href="/dashboard">Acessar dashboard</Link>
+                  <Link href="/dashboard">Acessar painel</Link>
                 </Button>
               ) : (
                 <>

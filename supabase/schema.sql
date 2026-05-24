@@ -10,7 +10,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type payment_method as enum ('stripe', 'kiwify', 'hotmart', 'kirvano');
+  create type payment_method as enum ('stripe', 'kiwify', 'hotmart', 'kirvano', 'manual');
 exception when duplicate_object then null; end $$;
 
 do $$ begin
@@ -37,12 +37,14 @@ create table if not exists public.users (
   full_name varchar(255),
   avatar_url text,
   is_admin boolean not null default false,
+  is_super_admin boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
 );
 create index if not exists users_email_idx on public.users(email);
 create index if not exists users_is_admin_idx on public.users(is_admin);
+create index if not exists users_is_super_admin_idx on public.users(is_super_admin);
 
 -- =========== SAAS ===========
 create table if not exists public.saas (
@@ -58,6 +60,8 @@ create table if not exists public.saas (
   stripe_product_id varchar(255),
   stripe_price_id varchar(255),
   external_url text,
+  trial_enabled boolean not null default false,
+  trial_max_uses integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
@@ -65,11 +69,33 @@ create table if not exists public.saas (
 create index if not exists saas_slug_idx on public.saas(slug);
 create index if not exists saas_status_idx on public.saas(status);
 
+-- =========== SAAS PLANS ===========
+-- Planos por produto (ex: Básico sem IA, Pro com IA).
+create table if not exists public.saas_plans (
+  id uuid primary key default gen_random_uuid(),
+  saas_id uuid not null references public.saas(id) on delete cascade,
+  name varchar(255) not null,
+  slug varchar(100) not null,
+  description text,
+  price_monthly numeric(10,2) not null,
+  features jsonb not null default '[]'::jsonb,
+  stripe_price_id varchar(255),
+  has_ai_chat boolean not null default false,
+  is_default boolean not null default false,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(saas_id, slug)
+);
+create index if not exists plans_saas_idx on public.saas_plans(saas_id);
+create index if not exists plans_sort_idx on public.saas_plans(saas_id, sort_order);
+
 -- =========== SUBSCRIPTIONS ===========
 create table if not exists public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   saas_id uuid not null references public.saas(id) on delete restrict,
+  plan_id uuid references public.saas_plans(id) on delete set null,
   status subscription_status not null default 'pending',
   stripe_subscription_id varchar(255),
   stripe_customer_id varchar(255),
@@ -155,6 +181,10 @@ do $$ begin
     for each row execute function public.set_updated_at();
 exception when duplicate_object then null; end $$;
 do $$ begin
+  create trigger trg_plans_updated before update on public.saas_plans
+    for each row execute function public.set_updated_at();
+exception when duplicate_object then null; end $$;
+do $$ begin
   create trigger trg_subs_updated before update on public.subscriptions
     for each row execute function public.set_updated_at();
 exception when duplicate_object then null; end $$;
@@ -175,8 +205,9 @@ language plpgsql
 set search_path = public, pg_temp
 as $$
 begin
-  if new.is_admin <> old.is_admin and auth.role() <> 'service_role' then
-    raise exception 'cannot change is_admin via client';
+  if (new.is_admin <> old.is_admin or new.is_super_admin <> old.is_super_admin)
+     and auth.role() <> 'service_role' then
+    raise exception 'cannot change admin roles via client';
   end if;
   return new;
 end $$;
@@ -212,6 +243,7 @@ exception when duplicate_object then null; end $$;
 -- =========== ROW LEVEL SECURITY ===========
 alter table public.users enable row level security;
 alter table public.saas enable row level security;
+alter table public.saas_plans enable row level security;
 alter table public.subscriptions enable row level security;
 alter table public.saas_integrations enable row level security;
 alter table public.payments enable row level security;
@@ -227,6 +259,10 @@ drop policy if exists users_self_update on public.users;
 -- (writes que mudem is_admin precisam usar service role; client can't escalate)
 create policy users_self_update on public.users for update
   using (auth.uid() = id) with check (auth.uid() = id);
+
+-- saas_plans: leitura publica (planos de produtos ativos). Admin gerencia via service_role.
+drop policy if exists plans_public_read on public.saas_plans;
+create policy plans_public_read on public.saas_plans for select using (true);
 
 -- saas: leitura publica para status active. Admin gerencia.
 drop policy if exists saas_public_read on public.saas;
@@ -252,6 +288,56 @@ create policy pay_self_read on public.payments for select
 drop policy if exists wh_admin_read on public.webhook_logs;
 create policy wh_admin_read on public.webhook_logs for select
   using (exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin));
+
+-- =========== RATE LIMITS ===========
+create table if not exists public.rate_limit_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  endpoint text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists rl_user_endpoint_time_idx
+  on public.rate_limit_logs (user_id, endpoint, created_at);
+
+alter table public.rate_limit_logs enable row level security;
+
+-- check_rate_limit: retorna true se dentro do limite, false se excedido.
+-- SECURITY DEFINER: executa como owner para bypass de RLS no insert.
+create or replace function public.check_rate_limit(
+  p_user_id uuid,
+  p_endpoint text,
+  p_limit int,
+  p_window_seconds int
+) returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_count int;
+begin
+  select count(*) into v_count
+  from rate_limit_logs
+  where user_id = p_user_id
+    and endpoint = p_endpoint
+    and created_at >= now() - (p_window_seconds || ' seconds')::interval;
+
+  if v_count >= p_limit then
+    return false;
+  end if;
+
+  insert into rate_limit_logs (user_id, endpoint) values (p_user_id, p_endpoint);
+
+  -- limpeza oportunística de logs antigos (mantém tabela enxuta)
+  delete from rate_limit_logs
+  where created_at < now() - interval '2 hours';
+
+  return true;
+end $$;
+
+-- =========== MIGRATION: aplicar em BD existente ===========
+-- Se o banco já existia antes dos planos, rodar:
+-- alter table public.subscriptions add column if not exists plan_id uuid references public.saas_plans(id) on delete set null;
 
 -- =========== SEED OPCIONAL ===========
 -- Inserir um SaaS de exemplo para teste.

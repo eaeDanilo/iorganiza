@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Package, Users, BarChart3, Webhook, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, Users, BarChart3, Webhook, Settings, ScrollText } from 'lucide-react';
 
 const items = [
   { href: '/admin', label: 'Visão geral', icon: LayoutDashboard },
@@ -10,13 +10,14 @@ const items = [
   { href: '/admin/usuarios', label: 'Usuários', icon: Users },
   { href: '/admin/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/admin/webhooks', label: 'Webhooks', icon: Webhook },
+  { href: '/admin/logs', label: 'Logs', icon: ScrollText },
   { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <aside className="w-64 border-r border-border bg-background p-6">
+    <div className="flex h-full flex-col p-6">
       <div className="mb-8 flex flex-col items-center text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-secondary to-primary text-2xl font-bold text-white shadow-glow-coral">
           iO
@@ -32,6 +33,7 @@ export function AdminSidebar() {
             <Link
               key={it.href}
               href={it.href}
+              onClick={onNavigate}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all',
                 active
@@ -45,6 +47,14 @@ export function AdminSidebar() {
           );
         })}
       </nav>
+    </div>
+  );
+}
+
+export function AdminSidebar() {
+  return (
+    <aside className="hidden w-64 shrink-0 border-r border-border bg-background md:block">
+      <AdminSidebarContent />
     </aside>
   );
 }

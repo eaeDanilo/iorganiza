@@ -12,6 +12,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,20 +38,48 @@ export default function SignupPage() {
       setError(translateAuthError(error.message));
       return;
     }
+    setRegisteredEmail(email);
     setDone(true);
+  }
+
+  async function onResend() {
+    if (!registeredEmail) return;
+    setResending(true);
+    setResent(false);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.resend({
+      type: 'signup',
+      email: registeredEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setResending(false);
+    setResent(true);
   }
 
   if (done) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Confira seu email</CardTitle>
+          <CardTitle>Confira seu e-mail</CardTitle>
           <CardDescription>
-            Enviamos um link de confirmação. Clique nele para ativar sua conta.
+            Enviamos um link de confirmação para <strong>{registeredEmail}</strong>. Clique nele para ativar sua conta.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <Button asChild className="w-full"><Link href="/auth/login">Voltar ao login</Link></Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={onResend}
+            disabled={resending || resent}
+          >
+            {resending ? 'Reenviando...' : resent ? 'E-mail reenviado!' : 'Reenviar e-mail de confirmação'}
+          </Button>
+          {resent && (
+            <p className="text-center text-sm text-muted-foreground">
+              Verifique também a pasta de spam.
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -67,7 +98,7 @@ export default function SignupPage() {
             <Input id="full_name" name="full_name" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-mail</Label>
             <Input id="email" name="email" type="email" required />
           </div>
           <div className="space-y-2">

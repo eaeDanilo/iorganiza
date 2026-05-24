@@ -13,6 +13,7 @@ export async function processStripeEvent(event: Stripe.Event) {
     const sess = event.data.object as Stripe.Checkout.Session;
     const userId = sess.metadata?.user_id;
     const saasId = sess.metadata?.saas_id;
+    const planId = sess.metadata?.plan_id || null;
     if (!userId || !saasId) return;
     const subId = (sess.subscription as string) || null;
     let periodEnd: string | null = null;
@@ -21,7 +22,7 @@ export async function processStripeEvent(event: Stripe.Event) {
       periodEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
     }
     const sub = await upsertSubscription({
-      userId, saasId, status: 'active', paymentMethod: 'stripe',
+      userId, saasId, planId, status: 'active', paymentMethod: 'stripe',
       pricePaid: sess.amount_total ? sess.amount_total / 100 : null,
       stripeSubId: subId, stripeCustomerId: sess.customer as string,
       currentPeriodStart: new Date().toISOString(), currentPeriodEnd: periodEnd,

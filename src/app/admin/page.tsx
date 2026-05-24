@@ -24,7 +24,7 @@ export default async function AdminHomePage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight">Visão geral</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">Visão geral</h1>
         <p className="mt-2 text-muted-foreground">Métricas em tempo real da plataforma.</p>
       </div>
 

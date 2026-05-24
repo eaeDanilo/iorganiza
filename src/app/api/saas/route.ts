@@ -17,6 +17,8 @@ const saasSchema = z.object({
   status: z.enum(['active', 'inactive']).default('active'),
   stripe_product_id: z.string().nullable().optional(),
   stripe_price_id: z.string().nullable().optional(),
+  trial_enabled: z.boolean().default(false),
+  trial_max_uses: z.number().int().nonnegative().default(0),
 });
 
 export async function GET() {

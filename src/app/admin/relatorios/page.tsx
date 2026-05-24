@@ -32,16 +32,16 @@ export default async function RelatoriosPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Relatórios</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Relatórios</h1>
       <p className="mt-1 text-muted-foreground">Análises de receita e assinaturas.</p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Mais vendidos (por MRR)</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Mais vendidos (por Receita Mensal)</CardTitle></CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow><TableHead>SaaS</TableHead><TableHead>Assinantes</TableHead><TableHead className="text-right">MRR</TableHead></TableRow>
+                <TableRow><TableHead>Sistema</TableHead><TableHead>Assinantes</TableHead><TableHead className="text-right">Receita Mensal</TableHead></TableRow>
               </TableHeader>
               <TableBody>
                 {ranked.map((r) => (
@@ -77,7 +77,7 @@ export default async function RelatoriosPage() {
       </div>
 
       <p className="mt-6 text-sm text-muted-foreground">
-        Para export CSV use <code>/api/reports/revenue?format=csv</code> e endpoints similares.
+        Para exportar em CSV use <code>/api/reports/revenue?format=csv</code> e endpoints similares.
       </p>
     </div>
   );

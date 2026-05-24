@@ -15,24 +15,24 @@ export default async function AdminSaasListPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">SaaS</h1>
-          <p className="mt-1 text-muted-foreground">Gerencie todos os SaaS da plataforma.</p>
+          <h1 className="text-2xl font-bold sm:text-3xl">Sistemas</h1>
+          <p className="mt-1 text-muted-foreground">Gerencie todos os sistemas da plataforma.</p>
         </div>
-        <Button asChild>
-          <Link href="/admin/saas/novo">+ Novo SaaS</Link>
+        <Button asChild className="self-start sm:self-auto">
+          <Link href="/admin/saas/novo">+ Novo Sistema</Link>
         </Button>
       </div>
 
       <Card className="mt-6">
-        <CardHeader><CardTitle>Todos os SaaS</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader><CardTitle>Todos os Sistemas</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Slug</TableHead>
+                <TableHead>Identificador</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Criado</TableHead>

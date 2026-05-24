@@ -7,7 +7,7 @@ export function Footer() {
         <div>
           <h3 className="text-lg font-bold text-primary">iOrganiza</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Hub centralizado para todos seus SaaS de produtividade.
+            Plataforma centralizada para todos seus sistemas de produtividade.
           </p>
         </div>
         <div>
@@ -25,7 +25,7 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="mb-3 text-sm font-semibold text-foreground">Legal</h4>
+          <h4 className="mb-3 text-sm font-semibold text-foreground">Jurídico</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li><Link href="/termos" className="hover:text-foreground">Termos</Link></li>
             <li><Link href="/privacidade" className="hover:text-foreground">Privacidade</Link></li>
@@ -33,7 +33,7 @@ export function Footer() {
         </div>
       </div>
       <div className="container mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} iOrganiza Hub. Todos os direitos reservados.
+        © {new Date().getFullYear()} iOrganiza. Todos os direitos reservados.
       </div>
     </footer>
   );

@@ -11,6 +11,34 @@ function wrap(title: string, body: string): string {
 }
 
 export const emailTemplates = {
+  confirmEmail(confirmUrl: string) {
+    return {
+      subject: 'Confirme seu e-mail – iOrganiza',
+      html: wrap('Confirmar e-mail', `
+        <h2 style="color:#fff;">Confirme seu e-mail</h2>
+        <p style="color:#A0A0A0;">Clique no botão abaixo para ativar sua conta no iOrganiza.</p>
+        <a href="${confirmUrl}"
+           style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
+          Confirmar e-mail
+        </a>
+        <p style="color:#606060;font-size:12px;margin-top:16px;">Link válido por 24 horas. Se não foi você, ignore este e-mail.</p>
+      `),
+    };
+  },
+  resetPassword(resetUrl: string) {
+    return {
+      subject: 'Redefinir senha – iOrganiza',
+      html: wrap('Redefinir senha', `
+        <h2 style="color:#fff;">Redefinição de senha</h2>
+        <p style="color:#A0A0A0;">Clique no botão abaixo para criar uma nova senha.</p>
+        <a href="${resetUrl}"
+           style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
+          Redefinir senha
+        </a>
+        <p style="color:#606060;font-size:12px;margin-top:16px;">Link válido por 1 hora. Se não foi você, ignore este e-mail.</p>
+      `),
+    };
+  },
   welcome(name: string) {
     return {
       subject: 'Bem-vindo ao iOrganiza',

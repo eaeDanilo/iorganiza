@@ -29,7 +29,8 @@ function LoginForm() {
       setError(translateAuthError(error.message));
       return;
     }
-    const redirect = search.get('redirect') || '/dashboard';
+    const raw = search.get('redirect') || '/dashboard';
+    const redirect = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
     router.push(redirect);
     router.refresh();
   }
@@ -37,7 +38,7 @@ function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">E-mail</Label>
         <Input id="email" name="email" type="email" required />
       </div>
       <div className="space-y-2">
@@ -62,7 +63,7 @@ export default function LoginPage() {
     <Card>
       <CardHeader>
         <CardTitle>Entrar</CardTitle>
-        <CardDescription>Acesse seu dashboard iOrganiza.</CardDescription>
+        <CardDescription>Acesse seu painel iOrganiza.</CardDescription>
       </CardHeader>
       <CardContent>
         <Suspense fallback={null}>

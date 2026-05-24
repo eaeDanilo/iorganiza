@@ -19,7 +19,7 @@ export default function ConfiguracoesPage() {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Integrações</CardTitle>
-          <CardDescription>Status calculado em runtime baseado nas envs presentes.</CardDescription>
+          <CardDescription>Status calculado em tempo de execução com base nas variáveis de ambiente presentes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {integrations.map((i) => {
@@ -46,7 +46,7 @@ export default function ConfiguracoesPage() {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>URLs de webhook</CardTitle>
-          <CardDescription>Configure essas URLs nos dashboards das plataformas.</CardDescription>
+          <CardDescription>Configure essas URLs nos painéis das plataformas.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {[

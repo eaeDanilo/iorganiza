@@ -22,7 +22,7 @@ export default async function MeusSaasPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Meus SaaS</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Meus Sistemas</h1>
       <p className="mt-1 text-muted-foreground">Todas as suas assinaturas, ativas e canceladas.</p>
 
       {subs.length === 0 ? (
@@ -37,15 +37,15 @@ export default async function MeusSaasPage() {
           {subs.map((s) => (
             <Card key={s.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{s.saas.name}</CardTitle>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="text-lg sm:text-xl">{s.saas.name}</CardTitle>
                   <Badge variant={s.status === 'active' ? 'success' : s.status === 'pending' ? 'outline' : 'destructive'}>
                     {subscriptionStatusLabel[s.status]}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 text-sm sm:gap-4 md:grid-cols-4">
                   <div>
                     <p className="text-muted-foreground">Valor</p>
                     <p className="font-medium">{formatCurrency(Number(s.price_paid) || s.saas.price_monthly)}</p>
@@ -63,15 +63,15 @@ export default async function MeusSaasPage() {
                     <p className="font-medium">{formatDate(s.current_period_end)}</p>
                   </div>
                 </div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {s.status === 'active' && (
-                    <Button asChild>
-                      <Link href={s.saas.external_url || '#'}>Acessar {s.saas.name}</Link>
+                    <Button asChild className="w-full sm:w-auto">
+                      <Link href={s.saas.external_url || `/dashboard/${s.saas.slug}`}>Acessar {s.saas.name}</Link>
                     </Button>
                   )}
                   {s.status === 'active' && (
-                    <form action={`/api/subscriptions/${s.id}/cancel`} method="post">
-                      <Button variant="outline" type="submit">Cancelar</Button>
+                    <form action={`/api/subscriptions/${s.id}/cancel`} method="post" className="w-full sm:w-auto">
+                      <Button variant="outline" type="submit" className="w-full sm:w-auto">Cancelar</Button>
                     </form>
                   )}
                 </div>
