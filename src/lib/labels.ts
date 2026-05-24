@@ -14,6 +14,7 @@ export const paymentMethodLabel: Record<PaymentMethod, string> = {
   kiwify: 'Kiwify',
   hotmart: 'Hotmart',
   kirvano: 'Kirvano',
+  manual: 'Manual',
 };
 
 export const paymentStatusLabel: Record<PaymentStatus, string> = {
