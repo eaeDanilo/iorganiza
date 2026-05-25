@@ -1,48 +1,61 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth';
+import { handleError, jsonOk, jsonError } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
+const planSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().regex(/^[a-z0-9-]+$/).min(1).max(50),
+  description: z.string().max(500).nullable().optional(),
+  price_monthly: z.number().nonnegative(),
+  features: z.array(z.string().max(200)).max(50).default([]),
+  stripe_price_id: z.string().max(100).nullable().optional(),
+  has_ai_chat: z.boolean().default(false),
+  is_default: z.boolean().default(false),
+  sort_order: z.number().int().nonnegative().default(0),
+});
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getCurrentUser();
-  if (!user?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  try {
+    const user = await getCurrentUser();
+    if (!user?.is_admin) return jsonError('Sem permissão', 403, 'FORBIDDEN');
 
-  const supabase = createSupabaseServiceClient();
-  const { data, error } = await supabase
-    .from('saas_plans')
-    .select('*')
-    .eq('saas_id', params.id)
-    .order('sort_order', { ascending: true });
+    const supabase = createSupabaseServiceClient();
+    const { data, error } = await supabase
+      .from('saas_plans')
+      .select('*')
+      .eq('saas_id', params.id)
+      .order('sort_order', { ascending: true });
 
-  if (error) return NextResponse.json({ ok: false, error }, { status: 500 });
-  return NextResponse.json({ ok: true, data });
+    if (error) return jsonError(error.message, 500, 'INTERNAL');
+    return jsonOk(data);
+  } catch (err) {
+    return handleError(err);
+  }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getCurrentUser();
-  if (!user?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  try {
+    const user = await getCurrentUser();
+    if (!user?.is_admin) return jsonError('Sem permissão', 403, 'FORBIDDEN');
 
-  const body = await req.json();
-  const supabase = createSupabaseServiceClient();
+    const body = await req.json();
+    const parsed = planSchema.safeParse(body);
+    if (!parsed.success) return jsonError(parsed.error.issues[0].message, 400, 'VALIDATION');
 
-  const { data, error } = await supabase
-    .from('saas_plans')
-    .insert({
-      saas_id: params.id,
-      name: body.name,
-      slug: body.slug,
-      description: body.description || null,
-      price_monthly: Number(body.price_monthly),
-      features: Array.isArray(body.features) ? body.features : [],
-      stripe_price_id: body.stripe_price_id || null,
-      has_ai_chat: !!body.has_ai_chat,
-      is_default: !!body.is_default,
-      sort_order: Number(body.sort_order ?? 0),
-    })
-    .select()
-    .single();
+    const supabase = createSupabaseServiceClient();
+    const { data, error } = await supabase
+      .from('saas_plans')
+      .insert({ saas_id: params.id, ...parsed.data })
+      .select()
+      .single();
 
-  if (error) return NextResponse.json({ ok: false, error }, { status: 500 });
-  return NextResponse.json({ ok: true, data });
+    if (error) return jsonError(error.message, 500, 'INTERNAL');
+    return jsonOk(data);
+  } catch (err) {
+    return handleError(err);
+  }
 }
