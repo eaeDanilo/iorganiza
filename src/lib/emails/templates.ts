@@ -5,7 +5,7 @@ function wrap(title: string, body: string): string {
   <div style="max-width:560px;margin:0 auto;background:#0F1419;border:1px solid #333;border-radius:12px;padding:32px;">
     <h1 style="color:#0066FF;margin:0 0 16px 0;font-size:24px;">iOrganiza</h1>
     ${body}
-    <p style="color:#A0A0A0;font-size:12px;margin-top:32px;">iOrganiza Hub &middot; Centralize seus SaaS</p>
+    <p style="color:#A0A0A0;font-size:12px;margin-top:32px;">iOrganiza &middot; Centralize seus SaaS</p>
   </div>
 </body></html>`;
 }
@@ -13,52 +13,52 @@ function wrap(title: string, body: string): string {
 export const emailTemplates = {
   confirmEmail(confirmUrl: string) {
     return {
-      subject: 'Confirme seu e-mail – iOrganiza',
+      subject: 'Confirme seu e-mail para acessar o iOrganiza',
       html: wrap('Confirmar e-mail', `
-        <h2 style="color:#fff;">Confirme seu e-mail</h2>
-        <p style="color:#A0A0A0;">Clique no botão abaixo para ativar sua conta no iOrganiza.</p>
+        <h2 style="color:#fff;">Você está quase lá!</h2>
+        <p style="color:#A0A0A0;">Só falta um passo: confirme seu e-mail para ativar sua conta e começar a organizar todos os seus SaaS em um só lugar.</p>
         <a href="${confirmUrl}"
            style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
-          Confirmar e-mail
+          Confirmar meu e-mail
         </a>
-        <p style="color:#606060;font-size:12px;margin-top:16px;">Link válido por 24 horas. Se não foi você, ignore este e-mail.</p>
+        <p style="color:#606060;font-size:12px;margin-top:16px;">Este link expira em 24 horas. Se você não criou uma conta no iOrganiza, pode ignorar este e-mail com segurança.</p>
       `),
     };
   },
   resetPassword(resetUrl: string) {
     return {
-      subject: 'Redefinir senha – iOrganiza',
+      subject: 'Redefina sua senha no iOrganiza',
       html: wrap('Redefinir senha', `
-        <h2 style="color:#fff;">Redefinição de senha</h2>
-        <p style="color:#A0A0A0;">Clique no botão abaixo para criar uma nova senha.</p>
+        <h2 style="color:#fff;">Solicitação de nova senha</h2>
+        <p style="color:#A0A0A0;">Recebemos uma solicitação para redefinir a senha da sua conta. Clique no botão abaixo para criar uma senha nova.</p>
         <a href="${resetUrl}"
            style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
-          Redefinir senha
+          Criar nova senha
         </a>
-        <p style="color:#606060;font-size:12px;margin-top:16px;">Link válido por 1 hora. Se não foi você, ignore este e-mail.</p>
+        <p style="color:#606060;font-size:12px;margin-top:16px;">Este link expira em 1 hora. Se você não fez essa solicitação, sua conta está segura — pode ignorar este e-mail.</p>
       `),
     };
   },
   welcome(name: string) {
     return {
-      subject: 'Bem-vindo ao iOrganiza',
-      html: wrap('Bem-vindo', `
-        <h2 style="color:#fff;">Olá, ${name || 'usuário'}!</h2>
-        <p style="color:#A0A0A0;">Sua conta foi criada com sucesso.</p>
-        <p style="color:#A0A0A0;">Explore o catálogo e ative os SaaS que precisar.</p>
+      subject: `Sua conta está pronta, ${name || 'seja bem-vindo'}!`,
+      html: wrap('Bem-vindo ao iOrganiza', `
+        <h2 style="color:#fff;">Bem-vindo ao iOrganiza, ${name || 'seja bem-vindo'}!</h2>
+        <p style="color:#A0A0A0;">Sua conta foi criada com sucesso. Agora você pode centralizar, controlar e pagar todos os seus SaaS em um único lugar — sem planilha, sem surpresa no cartão.</p>
+        <p style="color:#A0A0A0;margin-top:12px;">Comece explorando o catálogo e ativando os serviços que você já usa.</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard"
            style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
-          Acessar Dashboard
+          Acessar meu painel
         </a>
       `),
     };
   },
   subscriptionActivated(saasName: string, accessUrl: string) {
     return {
-      subject: `Sua assinatura de ${saasName} está ativa`,
+      subject: `Assinatura do ${saasName} confirmada`,
       html: wrap('Assinatura ativa', `
-        <h2 style="color:#fff;">Pagamento confirmado</h2>
-        <p style="color:#A0A0A0;">Sua assinatura de <strong>${saasName}</strong> foi ativada.</p>
+        <h2 style="color:#fff;">Tudo certo! Sua assinatura está ativa.</h2>
+        <p style="color:#A0A0A0;">O pagamento foi confirmado e sua assinatura do <strong>${saasName}</strong> já está ativa. Você já pode acessar o serviço.</p>
         <a href="${accessUrl}" style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
           Acessar ${saasName}
         </a>
@@ -67,31 +67,40 @@ export const emailTemplates = {
   },
   subscriptionCanceled(saasName: string) {
     return {
-      subject: `Assinatura de ${saasName} cancelada`,
-      html: wrap('Cancelada', `
-        <h2 style="color:#fff;">Cancelamento confirmado</h2>
-        <p style="color:#A0A0A0;">Sua assinatura de <strong>${saasName}</strong> foi cancelada. Você manterá acesso até o fim do período pago.</p>
+      subject: `Cancelamento do ${saasName} registrado`,
+      html: wrap('Assinatura cancelada', `
+        <h2 style="color:#fff;">Cancelamento registrado</h2>
+        <p style="color:#A0A0A0;">Sua assinatura do <strong>${saasName}</strong> foi cancelada com sucesso. Você continuará com acesso completo até o fim do período já pago.</p>
+        <p style="color:#A0A0A0;margin-top:12px;">Se mudar de ideia, pode reativar a qualquer momento pelo seu painel.</p>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display:inline-block;background:#333;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
+          Ir para o painel
+        </a>
       `),
     };
   },
   renewalReminder(saasName: string, days: number) {
     return {
-      subject: `${saasName} renova em ${days} dias`,
-      html: wrap('Renovação', `
-        <h2 style="color:#fff;">Lembrete de renovação</h2>
-        <p style="color:#A0A0A0;">Sua assinatura de <strong>${saasName}</strong> renova em ${days} dias.</p>
+      subject: `Lembrete: ${saasName} renova em ${days} ${days === 1 ? 'dia' : 'dias'}`,
+      html: wrap('Lembrete de renovação', `
+        <h2 style="color:#fff;">Sua assinatura renova em breve</h2>
+        <p style="color:#A0A0A0;">Só um aviso: sua assinatura do <strong>${saasName}</strong> será renovada automaticamente em <strong>${days} ${days === 1 ? 'dia' : 'dias'}</strong>.</p>
+        <p style="color:#A0A0A0;margin-top:12px;">Se quiser cancelar ou alterar seu plano antes da renovação, acesse seu painel.</p>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display:inline-block;background:#0066FF;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
+          Gerenciar assinatura
+        </a>
       `),
     };
   },
   paymentFailed(saasName: string) {
     return {
-      subject: `Pagamento falhou em ${saasName}`,
-      html: wrap('Pagamento falhou', `
-        <h2 style="color:#FF3B30;">Não conseguimos cobrar</h2>
-        <p style="color:#A0A0A0;">O pagamento de <strong>${saasName}</strong> falhou. Atualize seus dados de cobrança.</p>
+      subject: `Ação necessária: pagamento do ${saasName} recusado`,
+      html: wrap('Pagamento recusado', `
+        <h2 style="color:#FF3B30;">Não conseguimos processar seu pagamento</h2>
+        <p style="color:#A0A0A0;">O pagamento da assinatura do <strong>${saasName}</strong> foi recusado. Para não perder acesso ao serviço, atualize seus dados de cobrança.</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/faturamento" style="display:inline-block;background:#FF0055;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px;">
-          Atualizar pagamento
+          Atualizar dados de cobrança
         </a>
+        <p style="color:#606060;font-size:12px;margin-top:16px;">Se precisar de ajuda, entre em contato com nosso suporte.</p>
       `),
     };
   },
