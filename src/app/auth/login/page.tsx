@@ -36,25 +36,35 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">E-mail</Label>
-        <Input id="email" name="email" type="email" required />
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Senha</Label>
-          <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
-            Esqueci a senha
-          </Link>
+    <>
+      {loading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
+          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-xl font-bold text-white shadow-lg">
+            IO
+          </div>
+          <p className="text-sm font-medium text-muted-foreground">Entrando...</p>
         </div>
-        <Input id="password" name="password" type="password" required />
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Entrando...' : 'Entrar'}
-      </Button>
-    </form>
+      )}
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">E-mail</Label>
+          <Input id="email" name="email" type="email" required />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Senha</Label>
+            <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline">
+              Esqueci a senha
+            </Link>
+          </div>
+          <Input id="password" name="password" type="password" required />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? 'Entrando...' : 'Entrar'}
+        </Button>
+      </form>
+    </>
   );
 }
 
