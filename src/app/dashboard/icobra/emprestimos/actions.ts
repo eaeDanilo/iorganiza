@@ -66,6 +66,16 @@ export async function criarEmprestimo(data: EmprestimoFormData) {
 export async function editarEmprestimo(id: string, data: EmprestimoFormData) {
   const userId = await getUserId();
   const supabase = createICobraServiceClient();
+
+  // Verifica ownership antes de qualquer operação em parcelas
+  const { data: owner } = await supabase
+    .from("emprestimos")
+    .select("id")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!owner) throw new Error("Empréstimo não encontrado.");
+
   const calculo = calcularEmprestimo(data);
 
   const { error: errUpdate } = await supabase
@@ -92,12 +102,13 @@ export async function editarEmprestimo(id: string, data: EmprestimoFormData) {
     .from("parcelas")
     .select("*")
     .eq("emprestimo_id", id)
+    .eq("user_id", userId)
     .order("numero");
 
   const pagas = (parcelasExistentes ?? []).filter((p) => p.data_pagamento);
   const numerosPagos = new Set(pagas.map((p) => p.numero));
 
-  await supabase.from("parcelas").delete().eq("emprestimo_id", id).is("data_pagamento", null);
+  await supabase.from("parcelas").delete().eq("emprestimo_id", id).eq("user_id", userId).is("data_pagamento", null);
 
   const novasParcelas = calculo.datas_vencimento
     .map((dataVenc, i) => {

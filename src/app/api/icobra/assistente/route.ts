@@ -12,8 +12,16 @@ export const dynamic = "force-dynamic";
 
 // Simple in-memory rate limiter: 20 req/min per user
 const rateLimitMap = new Map<string, { count: number; reset: number }>();
+let lastCleanup = Date.now();
 function checkRateLimit(key: string): boolean {
   const now = Date.now();
+  // Limpa entradas expiradas a cada 5 min para evitar leak
+  if (now - lastCleanup > 300_000) {
+    for (const [k, v] of rateLimitMap) {
+      if (now > v.reset) rateLimitMap.delete(k);
+    }
+    lastCleanup = now;
+  }
   const entry = rateLimitMap.get(key);
   if (!entry || now > entry.reset) {
     rateLimitMap.set(key, { count: 1, reset: now + 60_000 });
@@ -24,8 +32,10 @@ function checkRateLimit(key: string): boolean {
   return true;
 }
 
-const SYSTEM_PROMPT = `Você é o assistente do iCobra, sistema de gestão de empréstimos.
-Hoje é ${new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}.
+function buildSystemPrompt(): string {
+  const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  return `Você é o assistente do iCobra, sistema de gestão de empréstimos.
+Hoje é ${hoje}.
 
 Realize ações usando as ferramentas disponíveis. Responda em português, de forma amigável e concisa.
 
@@ -45,6 +55,7 @@ Ao criar empréstimo, extraia do texto:
 
 Para "dia 12" sem mês, use o mês/ano atual.
 Se o intervalo entre parcelas for ~7 dias use semanal, ~30 dias use mensal, ~1 dia use diario.`;
+}
 
 const tools: Anthropic.Tool[] = [
   {
@@ -216,6 +227,7 @@ async function executarFerramenta(
         .from("emprestimos")
         .select("id, nome_pessoa, valor_emprestado, total_a_receber, numero_parcelas, status, created_at")
         .eq("user_id", userId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (input.status && input.status !== "todos") {
@@ -237,6 +249,7 @@ async function executarFerramenta(
         .from("emprestimos")
         .select("*, parcelas(*)")
         .eq("user_id", userId)
+        .is("deleted_at", null)
         .ilike("nome_pessoa", `%${input.nome_pessoa}%`)
         .limit(1);
 
@@ -273,6 +286,7 @@ async function executarFerramenta(
         .from("emprestimos")
         .select("id, nome_pessoa")
         .eq("user_id", userId)
+        .is("deleted_at", null)
         .ilike("nome_pessoa", `%${input.nome_pessoa}%`)
         .limit(1);
 
@@ -328,6 +342,7 @@ async function executarFerramenta(
         .from("emprestimos")
         .select("id, nome_pessoa")
         .eq("user_id", userId)
+        .is("deleted_at", null)
         .ilike("nome_pessoa", `%${input.nome_pessoa}%`)
         .limit(1);
 
@@ -338,32 +353,23 @@ async function executarFerramenta(
 
       const { error } = await supabase
         .from("emprestimos")
-        .delete()
-        .eq("id", emprestimos[0].id);
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", emprestimos[0].id)
+        .eq("user_id", userId);
 
       if (error) return JSON.stringify({ erro: true, mensagem: `Falha ao excluir: ${error.message}` });
 
-      // Verificação pós-delete
-      const { data: ainda } = await supabase
-        .from("emprestimos")
-        .select("id")
-        .eq("id", emprestimos[0].id)
-        .maybeSingle();
-
-      if (ainda) {
-        return JSON.stringify({ erro: true, mensagem: "Exclusão falhou silenciosamente. Registro ainda existe no banco." });
-      }
-
       revalidatePath("/dashboard/icobra");
       revalidatePath("/dashboard/icobra/emprestimos");
+      revalidatePath("/dashboard/icobra/lixeira");
 
-      return JSON.stringify({ sucesso: true, nome_pessoa: emprestimos[0].nome_pessoa });
+      return JSON.stringify({ sucesso: true, nome_pessoa: emprestimos[0].nome_pessoa, mensagem: "Empréstimo movido para a lixeira." });
     }
 
     case "ver_inadimplentes": {
       const { data: parcelas, error: errParc } = await supabase
         .from("parcelas")
-        .select("*, emprestimos(nome_pessoa)")
+        .select("*, emprestimos(nome_pessoa, deleted_at)")
         .eq("user_id", userId)
         .is("data_pagamento", null);
 
@@ -371,7 +377,7 @@ async function executarFerramenta(
 
       const dataHoje = hoje();
       const inadimplentes = (parcelas ?? [])
-        .filter((p: any) => calcularStatusParcela(p.data_vencimento, p.data_pagamento) === "atrasado")
+        .filter((p: any) => !p.emprestimos?.deleted_at && calcularStatusParcela(p.data_vencimento, p.data_pagamento) === "atrasado")
         .map((p: any) => ({
           nome_pessoa: p.emprestimos?.nome_pessoa,
           parcela: p.numero,
@@ -472,7 +478,7 @@ export async function POST(request: NextRequest) {
   let response = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
-    system: SYSTEM_PROMPT,
+    system: buildSystemPrompt(),
     tools,
     messages: claudeMessages,
   });
@@ -505,7 +511,7 @@ export async function POST(request: NextRequest) {
     response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(),
       tools,
       messages: claudeMessages,
     });

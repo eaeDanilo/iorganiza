@@ -37,15 +37,20 @@ export async function findOrCreateUser(email: string, fullName?: string): Promis
   const supabase = createSupabaseServiceClient();
   const { data: existing } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
   if (existing) return existing.id;
-  // criar usuario no auth
   const { data: created, error } = await supabase.auth.admin.createUser({
     email,
     email_confirm: true,
     user_metadata: { full_name: fullName || '' },
   });
   if (error || !created.user) throw new Error(error?.message || 'createUser failed');
-  // O trigger handle_new_auth_user popula public.users.
-  return created.user.id;
+  // Aguarda trigger handle_new_auth_user popular public.users (max 2s)
+  const userId = created.user.id;
+  for (let i = 0; i < 4; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    const { data: row } = await supabase.from('users').select('id').eq('id', userId).maybeSingle();
+    if (row) return userId;
+  }
+  throw new Error(`Trigger não populou public.users para ${email} após criação`);
 }
 
 export async function findSaasBySlug(slug: string) {
@@ -56,13 +61,10 @@ export async function findSaasBySlug(slug: string) {
 
 export async function findSaasByExternalIdentifier(identifier: string) {
   const supabase = createSupabaseServiceClient();
-  // tenta por slug primeiro, depois name
-  const { data } = await supabase
-    .from('saas')
-    .select('*')
-    .or(`slug.eq.${identifier},name.ilike.${identifier}`)
-    .maybeSingle();
-  return data;
+  const { data: bySlug } = await supabase.from('saas').select('*').eq('slug', identifier).maybeSingle();
+  if (bySlug) return bySlug;
+  const { data: byName } = await supabase.from('saas').select('*').ilike('name', identifier).maybeSingle();
+  return byName ?? null;
 }
 
 export async function upsertSubscription(opts: {

@@ -335,6 +335,9 @@ begin
   return true;
 end $$;
 
+-- Somente service role pode chamar — clientes não têm acesso direto.
+revoke execute on function public.check_rate_limit(uuid, text, integer, integer) from anon, authenticated;
+
 -- =========== MIGRATION: aplicar em BD existente ===========
 -- Se o banco já existia antes dos planos, rodar:
 -- alter table public.subscriptions add column if not exists plan_id uuid references public.saas_plans(id) on delete set null;

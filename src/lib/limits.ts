@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 import { createICobraServiceClient } from '@/lib/icobra/supabase';
 
 const ICOBRA_SLUG = 'icobra';
@@ -82,7 +82,7 @@ export async function assertApiRateLimit(userId: string, endpoint: string): Prom
   const plan = await getICobraPlan(userId);
   const limit = PLAN_LIMITS[plan].api_per_hour;
 
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServiceClient();
   const { data: allowed, error } = await supabase.rpc('check_rate_limit', {
     p_user_id: userId,
     p_endpoint: endpoint,

@@ -1,7 +1,5 @@
 node_modules
 .next
-out
-build
 dist
 .DS_Store
 *.pem
@@ -17,5 +15,9 @@ next-env.d.ts
 .swc
 coverage
 
-.vercel
-.env*.local
+# Claude Code local settings (permissões pessoais)
+.claude/settings.local.json
+
+# Scripts com dados de usuários reais
+scripts/create-user-*.mjs
+scripts/seed-*.mjs

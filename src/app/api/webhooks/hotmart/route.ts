@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { logWebhook, markWebhook } from '@/lib/webhooks/helpers';
 import { processHotmart } from '@/lib/webhooks/processors';
 
@@ -12,7 +13,13 @@ export async function POST(req: NextRequest) {
   if (!expected) {
     return NextResponse.json({ error: 'webhook secret not configured' }, { status: 500 });
   }
-  if (hottok !== expected) {
+  let tokenMatch = false;
+  try {
+    tokenMatch = crypto.timingSafeEqual(Buffer.from(hottok ?? ''), Buffer.from(expected));
+  } catch {
+    tokenMatch = false;
+  }
+  if (!tokenMatch) {
     return NextResponse.json({ error: 'invalid hottok' }, { status: 401 });
   }
   let body: any;
