@@ -24,8 +24,8 @@ function LoginForm() {
     const password = String(fd.get('password'));
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(translateAuthError(error.message));
       return;
     }
