@@ -127,35 +127,114 @@ export async function editarEmprestimo(id: string, data: EmprestimoFormData) {
 export async function deletarEmprestimo(id: string) {
   const userId = await getUserId();
   const supabase = createICobraServiceClient();
-  const { error } = await supabase.from("emprestimos").delete().eq("id", id).eq("user_id", userId);
+  const { error } = await supabase
+    .from("emprestimos")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId);
   if (error) throw new Error("Não foi possível excluir: " + error.message);
   revalidatePath("/dashboard/icobra");
   revalidatePath("/dashboard/icobra/emprestimos");
+  revalidatePath("/dashboard/icobra/lixeira");
+}
+
+export async function restaurarEmprestimo(id: string) {
+  const userId = await getUserId();
+  const supabase = createICobraServiceClient();
+  const { error } = await supabase
+    .from("emprestimos")
+    .update({ deleted_at: null })
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw new Error("Não foi possível restaurar: " + error.message);
+  revalidatePath("/dashboard/icobra");
+  revalidatePath("/dashboard/icobra/emprestimos");
+  revalidatePath("/dashboard/icobra/lixeira");
+}
+
+export async function deletarEmprestimoPermanente(id: string) {
+  const userId = await getUserId();
+  const supabase = createICobraServiceClient();
+  const { error } = await supabase.from("emprestimos").delete().eq("id", id).eq("user_id", userId);
+  if (error) throw new Error("Não foi possível excluir permanentemente: " + error.message);
+  revalidatePath("/dashboard/icobra");
+  revalidatePath("/dashboard/icobra/emprestimos");
+  revalidatePath("/dashboard/icobra/lixeira");
 }
 
 export async function marcarParcelaPaga(parcelaId: string, dataPagamento: string) {
   const userId = await getUserId();
   const supabase = createICobraServiceClient();
+
+  const { data: parcela } = await supabase
+    .from("parcelas")
+    .select("emprestimo_id")
+    .eq("id", parcelaId)
+    .eq("user_id", userId)
+    .single();
+  if (!parcela) throw new Error("Parcela não encontrada.");
+
   const { error } = await supabase
     .from("parcelas")
     .update({ data_pagamento: dataPagamento, status: "pago" })
     .eq("id", parcelaId)
     .eq("user_id", userId);
   if (error) throw new Error("Não foi possível registrar o pagamento: " + error.message);
+
+  const [{ count: total }, { count: pagas }] = await Promise.all([
+    supabase
+      .from("parcelas")
+      .select("id", { count: "exact", head: true })
+      .eq("emprestimo_id", parcela.emprestimo_id),
+    supabase
+      .from("parcelas")
+      .select("id", { count: "exact", head: true })
+      .eq("emprestimo_id", parcela.emprestimo_id)
+      .not("data_pagamento", "is", null),
+  ]);
+
+  if (total !== null && pagas !== null && pagas >= total) {
+    await supabase
+      .from("emprestimos")
+      .update({ status: "quitado" })
+      .eq("id", parcela.emprestimo_id)
+      .eq("user_id", userId);
+  }
+
   revalidatePath("/dashboard/icobra");
   revalidatePath("/dashboard/icobra/emprestimos");
+  revalidatePath(`/dashboard/icobra/emprestimos/${parcela.emprestimo_id}`);
   revalidatePath("/dashboard/icobra/inadimplencia");
 }
 
 export async function desmarcarParcelaPaga(parcelaId: string) {
   const userId = await getUserId();
   const supabase = createICobraServiceClient();
+
+  const { data: parcela } = await supabase
+    .from("parcelas")
+    .select("emprestimo_id")
+    .eq("id", parcelaId)
+    .eq("user_id", userId)
+    .single();
+  if (!parcela) throw new Error("Parcela não encontrada.");
+
   const { error } = await supabase
     .from("parcelas")
     .update({ data_pagamento: null, status: "pendente" })
     .eq("id", parcelaId)
     .eq("user_id", userId);
   if (error) throw new Error("Não foi possível desmarcar: " + error.message);
+
+  await supabase
+    .from("emprestimos")
+    .update({ status: "ativo" })
+    .eq("id", parcela.emprestimo_id)
+    .eq("user_id", userId)
+    .eq("status", "quitado");
+
   revalidatePath("/dashboard/icobra");
   revalidatePath("/dashboard/icobra/emprestimos");
+  revalidatePath(`/dashboard/icobra/emprestimos/${parcela.emprestimo_id}`);
+  revalidatePath("/dashboard/icobra/inadimplencia");
 }

@@ -30,6 +30,7 @@ export default async function EmprestimoDetalhesPage({ params }: { params: { id:
     .select("*, parcelas(*)")
     .eq("id", params.id)
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .single();
 
   if (!emprestimo) notFound();

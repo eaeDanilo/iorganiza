@@ -49,7 +49,8 @@ export async function getEmprestimoUsage(userId: string): Promise<EmprestimoUsag
     .from('emprestimos')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('status', 'ativo');
+    .eq('status', 'ativo')
+    .is('deleted_at', null);
 
   const current = count ?? 0;
   return { count: current, max, atLimit: current >= max };
@@ -65,7 +66,8 @@ export async function assertEmprestimoLimit(userId: string): Promise<void> {
     .from('emprestimos')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('status', 'ativo');
+    .eq('status', 'ativo')
+    .is('deleted_at', null);
 
   if (error) throw error;
 

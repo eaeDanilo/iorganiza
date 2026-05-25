@@ -15,14 +15,17 @@ export default async function InadimplenciaPage() {
 
   const { data: parcelas } = await supabase
     .from("parcelas")
-    .select("*, emprestimos(nome_pessoa)")
+    .select("*, emprestimos(nome_pessoa, deleted_at)")
     .eq("user_id", user.id)
     .is("data_pagamento", null);
 
   const dataHoje = hoje();
   const items: InadimplenteItem[] = [];
 
-  for (const p of (parcelas as (Parcela & { emprestimos: { nome_pessoa: string } })[]) ?? []) {
+  type ParcelaComEmp = Parcela & { emprestimos: { nome_pessoa: string; deleted_at: string | null } };
+  const parcelasAtivas = ((parcelas as ParcelaComEmp[]) ?? []).filter((p) => !p.emprestimos?.deleted_at);
+
+  for (const p of parcelasAtivas) {
     if (calcularStatusParcela(p.data_vencimento, p.data_pagamento) !== "atrasado") continue;
     items.push({
       parcela_id: p.id,

@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ParcelaTabela } from "@/components/icobra/emprestimos/ParcelaTabela";
-import { marcarParcelaPaga } from "../actions";
+import { marcarParcelaPaga, desmarcarParcelaPaga } from "../actions";
 import type { Parcela } from "@/lib/icobra/types";
 
 export function ParcelaTabelaWrapper({ parcelas }: { parcelas: Parcela[] }) {
@@ -21,5 +21,21 @@ export function ParcelaTabelaWrapper({ parcelas }: { parcelas: Parcela[] }) {
     }
   }
 
-  return <ParcelaTabela parcelas={parcelas} onMarcarPago={handleMarcarPago} />;
+  async function handleDesmarcarPago(id: string) {
+    try {
+      await desmarcarParcelaPaga(id);
+      toast.success("Pagamento desfeito.");
+      startTransition(() => router.refresh());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao desfazer.");
+    }
+  }
+
+  return (
+    <ParcelaTabela
+      parcelas={parcelas}
+      onMarcarPago={handleMarcarPago}
+      onDesmarcarPago={handleDesmarcarPago}
+    />
+  );
 }

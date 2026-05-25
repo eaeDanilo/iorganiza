@@ -103,7 +103,7 @@ export function EmprestimoLista({ emprestimos, onDelete }: EmprestimoListaProps)
         open={!!paraDeletar}
         onOpenChange={(o) => !o && setParaDeletar(null)}
         title={`Excluir empréstimo de ${paraDeletar?.nome_pessoa}?`}
-        description="Esta ação não pode ser desfeita. Todas as parcelas serão removidas."
+        description="O empréstimo será movido para a lixeira e poderá ser restaurado."
         confirmText="Sim, excluir"
         variant="destructive"
         onConfirm={async () => { if (paraDeletar) await onDelete(paraDeletar.id); }}

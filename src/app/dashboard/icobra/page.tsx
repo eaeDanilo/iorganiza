@@ -17,18 +17,19 @@ export default async function ICobraPage() {
   const supabase = createICobraServiceClient();
 
   const [{ data: emprestimos }, { data: parcelas }] = await Promise.all([
-    supabase.from("emprestimos").select("*").eq("user_id", userId),
-    supabase.from("parcelas").select("*, emprestimos(nome_pessoa)").eq("user_id", userId),
+    supabase.from("emprestimos").select("*").eq("user_id", userId).is("deleted_at", null),
+    supabase.from("parcelas").select("*, emprestimos(nome_pessoa, deleted_at)").eq("user_id", userId),
   ]);
+
+  type ParcelaComEmp = Parcela & { emprestimos: { nome_pessoa: string; deleted_at: string | null } };
+  const parcelasAtivas = ((parcelas as ParcelaComEmp[]) ?? []).filter((p) => !p.emprestimos?.deleted_at);
 
   const resumo = calcularResumo(
     (emprestimos as Emprestimo[]) ?? [],
-    (parcelas as (Parcela & { emprestimos: { nome_pessoa: string } })[]) ?? []
+    parcelasAtivas
   );
 
-  const topInadimplentes = montarInadimplentes(
-    (parcelas as (Parcela & { emprestimos: { nome_pessoa: string } })[]) ?? []
-  ).slice(0, 5);
+  const topInadimplentes = montarInadimplentes(parcelasAtivas).slice(0, 5);
 
   return (
     <div>

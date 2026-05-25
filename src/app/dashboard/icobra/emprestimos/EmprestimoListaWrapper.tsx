@@ -18,7 +18,7 @@ export function EmprestimoListaWrapper({
   async function handleDelete(id: string) {
     try {
       await deletarEmprestimo(id);
-      toast.success("Empréstimo excluído com sucesso.");
+      toast.success("Empréstimo movido para a lixeira.");
       startTransition(() => router.refresh());
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao excluir.");

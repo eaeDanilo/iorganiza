@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,10 +16,12 @@ import type { Parcela } from "@/lib/icobra/types";
 interface ParcelaTabelaProps {
   parcelas: Parcela[];
   onMarcarPago: (parcelaId: string, dataPagamento: string) => Promise<void>;
+  onDesmarcarPago: (parcelaId: string) => Promise<void>;
 }
 
-export function ParcelaTabela({ parcelas, onMarcarPago }: ParcelaTabelaProps) {
+export function ParcelaTabela({ parcelas, onMarcarPago, onDesmarcarPago }: ParcelaTabelaProps) {
   const [paraMarcar, setParaMarcar] = useState<Parcela | null>(null);
+  const [paraDesmarcar, setParaDesmarcar] = useState<Parcela | null>(null);
   const [dataPagamento, setDataPagamento] = useState(hoje());
   const ordenadas = [...parcelas].sort((a, b) => a.numero - b.numero);
 
@@ -51,10 +53,15 @@ export function ParcelaTabela({ parcelas, onMarcarPago }: ParcelaTabelaProps) {
                     <TableCell className="text-right tabular-nums">{formatCurrency(Number(p.valor))}</TableCell>
                     <TableCell><ParcelaStatusBadge status={status} /></TableCell>
                     <TableCell className="text-right">
-                      {!p.data_pagamento && (
+                      {!p.data_pagamento ? (
                         <Button size="sm" variant="success" onClick={() => { setParaMarcar(p); setDataPagamento(hoje()); }}>
                           <Check className="mr-1 h-4 w-4" />
                           Marcar pago
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => setParaDesmarcar(p)}>
+                          <X className="mr-1 h-4 w-4" />
+                          Desfazer
                         </Button>
                       )}
                     </TableCell>
@@ -82,14 +89,19 @@ export function ParcelaTabela({ parcelas, onMarcarPago }: ParcelaTabelaProps) {
                     <ParcelaStatusBadge status={status} />
                   </div>
                 </div>
-                {!p.data_pagamento && (
+                {!p.data_pagamento ? (
                   <Button size="sm" variant="success" className="w-full" onClick={() => { setParaMarcar(p); setDataPagamento(hoje()); }}>
                     <Check className="mr-1 h-4 w-4" />
                     Marcar pago
                   </Button>
-                )}
-                {p.data_pagamento && (
-                  <p className="text-sm text-success">Pago em {formatDate(p.data_pagamento)}</p>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-success">Pago em {formatDate(p.data_pagamento)}</p>
+                    <Button size="sm" variant="outline" onClick={() => setParaDesmarcar(p)}>
+                      <X className="mr-1 h-4 w-4" />
+                      Desfazer
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -110,6 +122,16 @@ export function ParcelaTabela({ parcelas, onMarcarPago }: ParcelaTabelaProps) {
           <DatePicker value={dataPagamento} onChange={setDataPagamento} />
         </div>
       </ConfirmModal>
+
+      <ConfirmModal
+        open={!!paraDesmarcar}
+        onOpenChange={(o) => !o && setParaDesmarcar(null)}
+        title="Desfazer pagamento?"
+        description={paraDesmarcar ? `Parcela ${paraDesmarcar.numero} voltará para pendente.` : ""}
+        confirmText="Sim, desfazer"
+        variant="destructive"
+        onConfirm={async () => { if (paraDesmarcar) await onDesmarcarPago(paraDesmarcar.id); }}
+      />
     </>
   );
 }

@@ -36,20 +36,25 @@ export default async function HomePage() {
               iOrganiza centraliza acesso, faturamento e dados entre os sistemas que você usa. Assine só o que precisar, integre quando quiser.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Button asChild size="lg">
-                <Link href="/catalogo">Explorar Sistemas</Link>
-              </Button>
               {user ? (
-                <Button asChild size="lg" variant="outline">
-                  <Link href="/dashboard">Acessar painel</Link>
-                </Button>
+                <>
+                  <Button asChild size="lg">
+                    <Link href="/dashboard">Acessar painel</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/catalogo">Explorar Sistemas</Link>
+                  </Button>
+                </>
               ) : (
                 <>
-                  <Button asChild size="lg" variant="outline">
-                    <Link href="/auth/login">Entrar</Link>
-                  </Button>
-                  <Button asChild size="lg" variant="ghost">
+                  <Button asChild size="lg">
                     <Link href="/auth/signup">Criar conta grátis</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/catalogo">Explorar Sistemas</Link>
+                  </Button>
+                  <Button asChild size="sm" variant="ghost">
+                    <Link href="/auth/login">Entrar</Link>
                   </Button>
                 </>
               )}

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Banknote, AlertTriangle, ArrowLeft, Bot } from "lucide-react";
+import { LayoutDashboard, Banknote, AlertTriangle, ArrowLeft, Bot, Trash2 } from "lucide-react";
 
 const items = [
   { href: "/dashboard/icobra", label: "Painel", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/icobra/emprestimos", label: "Empréstimos", icon: Banknote, exact: false },
   { href: "/dashboard/icobra/inadimplencia", label: "Inadimplência", icon: AlertTriangle, exact: false },
   { href: "/dashboard/icobra/assistente", label: "Assistente IA", icon: Bot, exact: false },
+  { href: "/dashboard/icobra/lixeira", label: "Lixeira", icon: Trash2, exact: false },
 ];
 
 export function ICobraSidebarContent({ onNavigate }: { onNavigate?: () => void }) {

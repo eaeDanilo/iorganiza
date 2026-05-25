@@ -20,6 +20,7 @@ export interface Emprestimo {
   lucro: number;
   status: EmprestimoStatus;
   created_at: string;
+  deleted_at: string | null;
 }
 
 export interface Parcela {

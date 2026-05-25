@@ -15,7 +15,7 @@ export function ExcluirBotao({ id, nome }: { id: string; nome: string }) {
   async function handleConfirm() {
     try {
       await deletarEmprestimo(id);
-      toast.success("Empréstimo excluído.");
+      toast.success("Empréstimo movido para a lixeira.");
       router.push("/dashboard/icobra/emprestimos");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao excluir.");
@@ -32,7 +32,7 @@ export function ExcluirBotao({ id, nome }: { id: string; nome: string }) {
         open={aberto}
         onOpenChange={setAberto}
         title={`Excluir empréstimo de ${nome}?`}
-        description="Esta ação não pode ser desfeita. Todas as parcelas serão removidas."
+        description="O empréstimo será movido para a lixeira e poderá ser restaurado."
         confirmText="Sim, excluir"
         variant="destructive"
         onConfirm={handleConfirm}
