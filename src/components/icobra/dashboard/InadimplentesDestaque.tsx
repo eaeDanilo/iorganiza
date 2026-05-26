@@ -1,58 +1,62 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import type { InadimplenteItem } from "@/lib/icobra/types";
 
 export function InadimplentesDestaque({ itens }: { itens: InadimplenteItem[] }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Top inadimplentes</CardTitle>
+    <div className="rounded-xl bg-white/[0.04] ring-1 ring-white/[0.07]">
+      <div className="flex items-center justify-between px-5 py-4">
+        <h2 className="text-sm font-semibold text-white">Inadimplentes</h2>
         {itens.length > 0 && (
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard/icobra/inadimplencia">
-              Ver todos
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
+          <Link
+            href="/dashboard/icobra/inadimplencia"
+            className="flex items-center gap-1 text-xs text-white/40 transition-colors hover:text-[#00C853]"
+          >
+            Ver todos
+            <ArrowRight className="h-3 w-3" />
+          </Link>
         )}
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="border-t border-white/[0.06]">
         {itens.length === 0 ? (
-          <div className="rounded-md bg-success/10 p-6 text-center text-success">
-            <p className="text-base font-medium">Nenhuma parcela em atraso!</p>
+          <div className="px-5 py-8 text-center">
+            <p className="text-sm font-medium text-[#00C853]">Nenhuma parcela em atraso</p>
+            <p className="mt-1 text-xs text-white/30">Tudo em dia.</p>
           </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y divide-white/[0.05]">
             {itens.map((item) => (
-              <li key={item.parcela_id} className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
+              <li key={item.parcela_id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/dashboard/icobra/emprestimos/${item.emprestimo_id}`}
-                    className="block truncate text-base font-medium hover:underline"
+                    className="block truncate text-sm font-medium text-white hover:text-[#00C853] transition-colors"
                   >
                     {item.nome_pessoa}
                   </Link>
-                  <p className="text-sm text-muted-foreground">
-                    {item.dias_atraso} {item.dias_atraso === 1 ? "dia" : "dias"} de atraso
+                  <p className="text-xs text-white/35">
+                    {item.dias_atraso} {item.dias_atraso === 1 ? "dia" : "dias"} em atraso
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-base font-bold text-destructive tabular-nums">
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <span className="text-sm font-semibold tabular-nums text-red-400">
                     {formatCurrency(item.valor)}
                   </span>
-                  <Badge variant={item.dias_atraso > 7 ? "destructive" : "warning"}>
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                    item.dias_atraso > 7
+                      ? "bg-red-500/15 text-red-400"
+                      : "bg-yellow-500/15 text-yellow-400"
+                  }`}>
                     {item.dias_atraso > 7 ? "Crítico" : "Recente"}
-                  </Badge>
+                  </span>
                 </div>
               </li>
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

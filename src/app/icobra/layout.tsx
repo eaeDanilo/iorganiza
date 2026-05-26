@@ -1,28 +1,21 @@
 import type { Metadata } from 'next';
-import { Bebas_Neue, DM_Mono } from 'next/font/google';
+import { Figtree } from 'next/font/google';
 
-const bebas = Bebas_Neue({
+const figtree = Figtree({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-bebas',
-  weight: '400',
-});
-
-const mono = DM_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-mono-dm',
-  weight: ['300', '400', '500'],
+  variable: '--font-figtree',
+  weight: ['300', '400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
-  title: 'iCobra — Gestão de cobranças e empréstimos',
-  description: 'Controle empréstimos, parcelas e inadimplentes em um único lugar.',
+  title: 'iCobra — Controle seus empréstimos',
+  description: 'Gerencie empréstimos e cobranças sem planilha.',
 };
 
 export default function ICobraLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${bebas.variable} ${mono.variable}`}>
+    <div className={figtree.variable} style={{ fontFamily: 'var(--font-figtree)' }}>
       {children}
     </div>
   );

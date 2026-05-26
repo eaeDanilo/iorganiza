@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ICobraSidebar, ICobraSidebarContent } from "./Sidebar";
 
@@ -22,41 +21,38 @@ export function ICobraLayoutShell({ children, userEmail, logoutButton }: Props) 
   }, [pathname]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-[#0C1A10]">
       <ICobraSidebar />
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="p-0">
+        <SheetContent side="left" className="border-white/[0.07] bg-[#0B1810] p-0">
           <SheetTitle className="sr-only">Menu iCobra</SheetTitle>
           <ICobraSidebarContent onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4 sm:h-16 sm:px-6 md:px-8">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <Button
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#0C1A10] px-4 sm:h-16 sm:px-6">
+          <div className="flex items-center gap-3">
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={() => setMobileOpen(true)}
-              className="md:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white transition-colors md:hidden"
               aria-label="Abrir menu"
             >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white">
-              iC
+              <Menu className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded bg-[#00C853]">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6L5 9L10 3" stroke="#0C1A10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className="text-[15px] font-semibold text-white">iCobra</span>
             </div>
-            <span className="truncate font-semibold">iCobra</span>
-            <span className="hidden text-sm text-muted-foreground sm:block">
-              — Gestão de Empréstimos
-            </span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <span className="hidden max-w-[220px] truncate text-sm text-muted-foreground md:block">
-              {userEmail}
-            </span>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs text-white/30 md:block">{userEmail}</span>
             {logoutButton}
           </div>
         </header>

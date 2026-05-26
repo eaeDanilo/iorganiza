@@ -17,51 +17,49 @@ export function ICobraSidebarContent({ onNavigate }: { onNavigate?: () => void }
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col p-6">
-      <div className="mb-8 flex flex-col items-center text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-2xl font-bold text-white shadow-lg">
-          iC
+    <div className="flex h-full flex-col bg-[#0B1810]">
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 border-b border-white/[0.07] px-5 py-5">
+        <div className="flex h-7 w-7 items-center justify-center rounded bg-[#00C853]">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2 6.5L5.5 10L11 3" stroke="#0B1810" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-        <p className="mt-2 text-base font-semibold">iCobra</p>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
-          Gestão de Empréstimos
-        </p>
+        <span className="text-[15px] font-semibold text-white">iCobra</span>
       </div>
 
-      <div className="mb-6 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
-
-      <nav className="flex-1 space-y-1">
+      {/* Nav */}
+      <nav className="flex-1 space-y-0.5 px-3 py-4">
         {items.map((it) => {
           const Icon = it.icon;
-          const active = it.exact
-            ? pathname === it.href
-            : pathname.startsWith(it.href);
+          const active = it.exact ? pathname === it.href : pathname.startsWith(it.href);
           return (
             <Link
               key={it.href}
               href={it.href}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
                 active
-                  ? "bg-emerald-500/10 font-medium text-emerald-400"
-                  : "text-muted-foreground hover:bg-surface hover:text-foreground",
+                  ? "bg-[#00C853]/10 font-medium text-[#00C853]"
+                  : "text-white/50 hover:bg-white/[0.05] hover:text-white",
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 shrink-0" />
               {it.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-4 border-t border-border pt-4">
+      {/* Back */}
+      <div className="border-t border-white/[0.07] px-3 py-4">
         <Link
           href="/dashboard"
           onClick={onNavigate}
-          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-all hover:bg-surface hover:text-foreground"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/30 transition-colors hover:bg-white/[0.05] hover:text-white/60"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 shrink-0" />
           Voltar ao iOrganiza
         </Link>
       </div>
@@ -71,7 +69,7 @@ export function ICobraSidebarContent({ onNavigate }: { onNavigate?: () => void }
 
 export function ICobraSidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-background md:flex">
+    <aside className="hidden w-60 shrink-0 border-r border-white/[0.07] md:flex md:flex-col">
       <ICobraSidebarContent />
     </aside>
   );
