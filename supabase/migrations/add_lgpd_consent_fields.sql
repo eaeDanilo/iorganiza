@@ -30,16 +30,16 @@ revoke execute on function public.handle_new_auth_user() from anon, authenticate
 -- 3. pg_cron: hard-delete users soft-deleted > 90 days ago
 -- Requires pg_cron extension enabled in Supabase dashboard (Database > Extensions > pg_cron).
 -- If pg_cron is not enabled, use the Vercel cron route /api/cron/purge-users instead.
-do $$ begin
+do $outer$ begin
   perform cron.schedule(
     'lgpd-purge-deleted-users',
     '0 3 * * *', -- daily at 03:00 UTC
-    $$
+    $cron$
       delete from public.users
       where deleted_at is not null
         and deleted_at < now() - interval '90 days';
-    $$
+    $cron$
   );
 exception when others then
   raise notice 'pg_cron not available — use Vercel cron instead: %', sqlerrm;
-end $$;
+end $outer$;
