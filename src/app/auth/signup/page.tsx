@@ -24,6 +24,14 @@ export default function SignupPage() {
     const email = String(fd.get('email'));
     const password = String(fd.get('password'));
     const fullName = String(fd.get('full_name'));
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Informe um e-mail válido (ex: nome@dominio.com).');
+      setLoading(false);
+      return;
+    }
+
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signUp({
       email,
