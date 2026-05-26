@@ -5,7 +5,7 @@ import type { Saas, Subscription } from '@/types/database';
 
 export default async function DashboardCatalogoPage() {
   const user = (await getCurrentUser())!;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const [{ data: saas }, { data: subs }] = await Promise.all([
     supabase.from('saas').select('*').eq('status', 'active').is('deleted_at', null).order('name'),
     supabase.from('subscriptions').select('saas_id, status').eq('user_id', user.id),

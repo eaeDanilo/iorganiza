@@ -11,7 +11,7 @@ export const PLAN_LIMITS = {
 export type Plan = keyof typeof PLAN_LIMITS;
 
 export async function getICobraPlan(userId: string): Promise<Plan> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: saas } = await supabase
     .from('saas')

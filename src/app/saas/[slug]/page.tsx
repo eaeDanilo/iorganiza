@@ -8,13 +8,14 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatCurrency } from '@/lib/utils';
 import type { Saas, SaasPlan } from '@/types/database';
 
-export default async function SaasDetailPage({ params }: { params: { slug: string } }) {
-  const supabase = createSupabaseServerClient();
+export default async function SaasDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const supabase = await createSupabaseServerClient();
 
   const { data } = await supabase
     .from('saas')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .is('deleted_at', null)
     .maybeSingle();
   const saas = data as Saas | null;

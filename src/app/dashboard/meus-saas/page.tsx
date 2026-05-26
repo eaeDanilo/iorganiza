@@ -12,7 +12,7 @@ type SubWithSaas = Subscription & { saas: Saas };
 
 export default async function MeusSaasPage() {
   const user = (await getCurrentUser())!;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('subscriptions')
     .select('*, saas:saas(*)')

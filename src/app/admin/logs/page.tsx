@@ -28,8 +28,8 @@ const TABS = [
 type PaymentWithUser = Payment & { users: { email: string; full_name: string | null } | null };
 type RateLimitLog = { id: string; user_id: string; endpoint: string; created_at: string; users: { email: string } | null };
 
-export default async function LogsPage({ searchParams }: { searchParams: { tab?: string } }) {
-  const tab = searchParams.tab ?? 'webhooks';
+export default async function LogsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab = 'webhooks' } = await searchParams;
   const supabase = createSupabaseServiceClient();
 
   let webhooks: WebhookLog[] = [];

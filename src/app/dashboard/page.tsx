@@ -14,7 +14,7 @@ type SubWithSaas = Subscription & { saas: Saas };
 
 export default async function DashboardHomePage() {
   const user = (await getCurrentUser())!;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: subs } = await supabase
     .from('subscriptions')
     .select('*, saas:saas(*)')

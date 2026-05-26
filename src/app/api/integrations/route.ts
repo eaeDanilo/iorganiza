@@ -14,7 +14,7 @@ const schema = z.object({
 export async function GET() {
   try {
     const user = await requireUser();
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from('saas_integrations')
       .select('*')
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const user = await requireUser();
     const body = schema.parse(await req.json());
     if (body.source_saas_id === body.target_saas_id) return jsonError('Origem e destino iguais', 400);
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
 
     // valida ambas assinaturas ativas
     const { data: subs } = await supabase

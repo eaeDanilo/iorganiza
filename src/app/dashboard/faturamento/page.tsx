@@ -11,7 +11,7 @@ type PayWithSub = Payment & { subscription: Subscription & { saas: Saas } };
 
 export default async function FaturamentoPage() {
   const user = (await getCurrentUser())!;
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('payments')
     .select('*, subscription:subscriptions(*, saas:saas(*))')

@@ -21,14 +21,15 @@ const FREQUENCIA_LABEL: Record<string, string> = {
   mensal: "Mensal",
 };
 
-export default async function EmprestimoDetalhesPage({ params }: { params: { id: string } }) {
+export default async function EmprestimoDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const user = (await getCurrentUser())!;
   const supabase = createICobraServiceClient();
 
   const { data: emprestimo } = await supabase
     .from("emprestimos")
     .select("*, parcelas(*)")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .is("deleted_at", null)
     .single();

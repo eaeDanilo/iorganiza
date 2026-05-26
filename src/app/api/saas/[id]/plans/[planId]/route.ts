@@ -18,8 +18,9 @@ const planUpdateSchema = z.object({
   sort_order: z.number().int().nonnegative().optional(),
 });
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string; planId: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string; planId: string }> }) {
   try {
+    const { id, planId } = await params;
     const user = await getCurrentUser();
     if (!user?.is_admin) return jsonError('Sem permissão', 403, 'FORBIDDEN');
 
@@ -31,8 +32,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string; 
     const { data, error } = await supabase
       .from('saas_plans')
       .update(parsed.data)
-      .eq('id', params.planId)
-      .eq('saas_id', params.id)
+      .eq('id', planId)
+      .eq('saas_id', id)
       .select()
       .single();
 
@@ -43,8 +44,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string; 
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string; planId: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string; planId: string }> }) {
   try {
+    const { id, planId } = await params;
     const user = await getCurrentUser();
     if (!user?.is_admin) return jsonError('Sem permissão', 403, 'FORBIDDEN');
 
@@ -52,8 +54,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     const { error } = await supabase
       .from('saas_plans')
       .delete()
-      .eq('id', params.planId)
-      .eq('saas_id', params.id);
+      .eq('id', planId)
+      .eq('saas_id', id);
 
     if (error) return jsonError(error.message, 500, 'INTERNAL');
     return jsonOk(null);

@@ -18,7 +18,7 @@ export default async function ICobraLayout({ children }: { children: React.React
 
   async function logoutAction() {
     "use server";
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
     redirect("/icobra");
   }

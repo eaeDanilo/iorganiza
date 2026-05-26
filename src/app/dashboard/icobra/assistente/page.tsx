@@ -12,7 +12,7 @@ export default async function AssistentePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // Find iCobra saas_id by slug
   const { data: icobraSaas } = await supabase

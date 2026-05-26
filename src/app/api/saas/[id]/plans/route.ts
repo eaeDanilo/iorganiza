@@ -18,8 +18,9 @@ const planSchema = z.object({
   sort_order: z.number().int().nonnegative().default(0),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user?.is_admin) return jsonError('Sem permissão', 403, 'FORBIDDEN');
 
@@ -27,7 +28,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     const { data, error } = await supabase
       .from('saas_plans')
       .select('*')
-      .eq('saas_id', params.id)
+      .eq('saas_id', id)
       .order('sort_order', { ascending: true });
 
     if (error) return jsonError(error.message, 500, 'INTERNAL');
@@ -37,8 +38,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user?.is_admin) return jsonError('Sem permissão', 403, 'FORBIDDEN');
 
@@ -49,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const supabase = createSupabaseServiceClient();
     const { data, error } = await supabase
       .from('saas_plans')
-      .insert({ saas_id: params.id, ...parsed.data })
+      .insert({ saas_id: id, ...parsed.data })
       .select()
       .single();
 

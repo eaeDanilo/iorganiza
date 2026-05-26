@@ -4,14 +4,15 @@ import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/s
 import { requireUser } from '@/lib/auth';
 import { handleError, jsonError, jsonOk } from '@/lib/api';
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await requireUser();
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*, saas:saas(*)')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle();
     if (error) throw error;
     if (!data || (data as any).user_id !== user.id) return jsonError('Não encontrado', 404, 'NOT_FOUND');
@@ -19,14 +20,15 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   } catch (e) { return handleError(e); }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await requireUser();
     const supabase = createSupabaseServiceClient();
     const { data, error } = await supabase
       .from('subscriptions')
       .update({ status: 'canceled', cancel_at: new Date().toISOString() })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .select('*')
       .maybeSingle();

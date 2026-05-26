@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const target = req.nextUrl.searchParams.get('target');
     if (!source || !target) return jsonError('source e target são obrigatórios', 400);
 
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: subs } = await supabase
       .from('subscriptions')
       .select('saas_id, status')

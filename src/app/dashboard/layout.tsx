@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: subs } = await supabase
     .from('subscriptions')
     .select('saas:saas(slug, name)')
@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   async function logoutAction() {
     "use server";
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
     redirect("/");
   }

@@ -6,10 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useCalculoEmprestimo } from "@/components/icobra/useCalculoEmprestimo";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { hoje } from "@/lib/icobra/calculos";
 import type { DiasPagamento, EmprestimoFormData, Frequencia, TipoRetorno } from "@/lib/icobra/types";
 
@@ -88,15 +87,14 @@ export function EmprestimoForm({ initialData, onSubmit, submitLabel = "Continuar
 
             <div className="space-y-2">
               <Label>Tipo de retorno</Label>
-              <ToggleGroup
-                type="single"
-                value={data.tipo_retorno}
-                onValueChange={(v) => v && update("tipo_retorno", v as TipoRetorno)}
-                className="w-full"
-              >
-                <ToggleGroupItem value="valor_fixo" className="flex-1">Valor fixo da parcela</ToggleGroupItem>
-                <ToggleGroupItem value="percentual" className="flex-1">Percentual sobre o valor</ToggleGroupItem>
-              </ToggleGroup>
+              <RadioToggle
+                value={data.tipo_retorno ?? "valor_fixo"}
+                onChange={(v) => update("tipo_retorno", v as TipoRetorno)}
+                options={[
+                  { value: "valor_fixo", label: "Valor fixo da parcela" },
+                  { value: "percentual", label: "Percentual sobre o valor" },
+                ]}
+              />
             </div>
 
             {data.tipo_retorno === "valor_fixo" ? (
@@ -173,15 +171,14 @@ export function EmprestimoForm({ initialData, onSubmit, submitLabel = "Continuar
 
             <div className="space-y-2">
               <Label>Dias de pagamento</Label>
-              <ToggleGroup
-                type="single"
-                value={data.dias_pagamento}
-                onValueChange={(v) => v && update("dias_pagamento", v as DiasPagamento)}
-                className="w-full"
-              >
-                <ToggleGroupItem value="todos_dias" className="flex-1">Todos os dias</ToggleGroupItem>
-                <ToggleGroupItem value="dias_uteis" className="flex-1">Apenas dias úteis</ToggleGroupItem>
-              </ToggleGroup>
+              <RadioToggle
+                value={data.dias_pagamento ?? "todos_dias"}
+                onChange={(v) => update("dias_pagamento", v as DiasPagamento)}
+                options={[
+                  { value: "todos_dias", label: "Todos os dias" },
+                  { value: "dias_uteis", label: "Apenas dias úteis" },
+                ]}
+              />
             </div>
           </CardContent>
         </Card>
@@ -246,6 +243,33 @@ function ResumoLinha({ label, value, destaque, className }: { label: string; val
       <span className={`tabular-nums ${destaque ? "text-xl font-bold text-primary" : "font-semibold"} ${className ?? ""}`}>
         {value}
       </span>
+    </div>
+  );
+}
+
+function RadioToggle({ value, onChange, options }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="inline-flex w-full items-center justify-center rounded-md border bg-background p-1 gap-1">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            "flex-1 inline-flex items-center justify-center rounded-sm px-4 py-2 text-sm font-medium transition-all",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            value === opt.value
+              ? "bg-primary text-primary-foreground"
+              : "hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }

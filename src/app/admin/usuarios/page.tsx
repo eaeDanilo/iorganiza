@@ -16,7 +16,8 @@ type UserRow = {
   subscriptions: { id: string; status: string; saas: { name: string } | null }[];
 };
 
-export default async function AdminUsersPage({ searchParams }: { searchParams: { q?: string } }) {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q: qParam } = await searchParams;
   const currentUser = await getCurrentUser();
   const isSuperAdmin = currentUser?.is_super_admin ?? false;
   const supabase = createSupabaseServiceClient();
@@ -27,7 +28,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: {
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(100);
-  if (searchParams.q) q = q.ilike('email', `%${searchParams.q}%`);
+  if (qParam) q = q.ilike('email', `%${qParam}%`);
   const { data } = await q;
   const users = (data ?? []) as unknown as UserRow[];
 
@@ -46,7 +47,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: {
       <form className="mt-4">
         <input
           name="q"
-          defaultValue={searchParams.q ?? ''}
+          defaultValue={qParam ?? ''}
           placeholder="Buscar por e-mail..."
           className="flex h-10 w-full rounded-md border border-input bg-surface px-3 text-sm md:w-80"
         />

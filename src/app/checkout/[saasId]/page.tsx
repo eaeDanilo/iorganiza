@@ -18,14 +18,16 @@ export default async function CheckoutPage({
   params,
   searchParams,
 }: {
-  params: { saasId: string };
-  searchParams: { error?: string; canceled?: string; plan?: string };
+  params: Promise<{ saasId: string }>;
+  searchParams: Promise<{ error?: string; canceled?: string; plan?: string }>;
 }) {
+  const { saasId } = await params;
+  const { error, canceled, plan } = await searchParams;
   const user = await getCurrentUser();
-  if (!user) redirect(`/auth/login?redirect=/checkout/${params.saasId}`);
+  if (!user) redirect(`/auth/login?redirect=/checkout/${saasId}`);
 
-  const supabase = createSupabaseServerClient();
-  const { data: saasData } = await supabase.from('saas').select('*').eq('id', params.saasId).maybeSingle();
+  const supabase = await createSupabaseServerClient();
+  const { data: saasData } = await supabase.from('saas').select('*').eq('id', saasId).maybeSingle();
   const saas = saasData as Saas | null;
   if (!saas) notFound();
   if (saas.status !== 'active') redirect('/catalogo');
@@ -41,8 +43,8 @@ export default async function CheckoutPage({
   // Resolve selected plan
   let selectedPlan: SaasPlan | null = null;
   if (plans.length > 0) {
-    if (searchParams.plan) {
-      selectedPlan = plans.find((p) => p.id === searchParams.plan) ?? null;
+    if (plan) {
+      selectedPlan = plans.find((p) => p.id === plan) ?? null;
       if (!selectedPlan) redirect(`/checkout/${saas.id}?error=invalid_plan`);
     } else {
       selectedPlan = plans.find((p) => p.is_default) ?? plans[0];
@@ -58,7 +60,7 @@ export default async function CheckoutPage({
     .maybeSingle();
   const existingSub = existing as Pick<Subscription, 'id' | 'status'> | null;
 
-  const errorMsg = searchParams.error ? (ERROR_MESSAGES[searchParams.error] ?? ERROR_MESSAGES.stripe_error) : null;
+  const errorMsg = error ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.stripe_error) : null;
 
   const displayPrice = selectedPlan?.price_monthly ?? saas.price_monthly;
   const displayFeatures = selectedPlan?.features ?? saas.features;
@@ -131,7 +133,7 @@ export default async function CheckoutPage({
               {errorMsg}
             </div>
           )}
-          {searchParams.canceled && !errorMsg && (
+          {canceled && !errorMsg && (
             <div className="mb-4 rounded-md border border-border bg-surface p-3 text-sm text-muted-foreground">
               Pagamento cancelado. Você pode tentar novamente quando quiser.
             </div>

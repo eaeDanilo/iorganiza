@@ -5,14 +5,15 @@ import { requireUser } from '@/lib/auth';
 import { handleError } from '@/lib/api';
 import { getStripe } from '@/lib/stripe';
 
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await requireUser();
     const supabase = createSupabaseServiceClient();
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .maybeSingle();
     if (!sub) {
@@ -28,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     await supabase
       .from('subscriptions')
       .update({ status: 'canceled', cancel_at: new Date().toISOString() })
-      .eq('id', params.id);
+      .eq('id', id);
     return NextResponse.redirect(new URL('/dashboard/meus-saas', _req.url));
   } catch (e) { return handleError(e); }
 }

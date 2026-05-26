@@ -21,35 +21,38 @@ const updateSchema = z.object({
   trial_max_uses: z.number().int().nonnegative().optional(),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase.from('saas').select('*').eq('id', params.id).maybeSingle();
+    const { id } = await params;
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.from('saas').select('*').eq('id', id).maybeSingle();
     if (error) throw error;
     if (!data) return jsonError('SaaS não encontrado', 404, 'NOT_FOUND');
     return jsonOk(data);
   } catch (e) { return handleError(e); }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireAdmin();
     const body = updateSchema.parse(await req.json());
     const supabase = createSupabaseServiceClient();
-    const { data, error } = await supabase.from('saas').update(body).eq('id', params.id).select('*').single();
+    const { data, error } = await supabase.from('saas').update(body).eq('id', id).select('*').single();
     if (error) throw error;
     return jsonOk(data);
   } catch (e) { return handleError(e); }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireAdmin();
     const supabase = createSupabaseServiceClient();
     const { error } = await supabase
       .from('saas')
       .update({ deleted_at: new Date().toISOString(), status: 'inactive' })
-      .eq('id', params.id);
+      .eq('id', id);
     if (error) throw error;
     return jsonOk({ deleted: true });
   } catch (e) { return handleError(e); }

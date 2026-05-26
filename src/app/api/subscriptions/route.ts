@@ -6,7 +6,7 @@ import { handleError, jsonOk } from '@/lib/api';
 export async function GET() {
   try {
     const user = await requireUser();
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from('subscriptions')
       .select('*, saas:saas(*)')

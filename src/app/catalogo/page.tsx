@@ -7,7 +7,7 @@ import type { Saas } from '@/types/database';
 export const revalidate = 60;
 
 export default async function CatalogoPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('saas')
     .select('*')

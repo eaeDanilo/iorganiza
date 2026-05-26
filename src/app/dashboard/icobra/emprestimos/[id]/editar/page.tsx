@@ -7,14 +7,15 @@ import type { Emprestimo } from "@/lib/icobra/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditarEmprestimoPage({ params }: { params: { id: string } }) {
+export default async function EditarEmprestimoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const user = (await getCurrentUser())!;
   const supabase = createICobraServiceClient();
 
   const { data: emprestimo } = await supabase
     .from("emprestimos")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id)
     .single();
 
