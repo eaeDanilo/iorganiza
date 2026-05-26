@@ -105,6 +105,21 @@ export default function SignupPage() {
             <Label htmlFor="password">Senha</Label>
             <Input id="password" name="password" type="password" minLength={8} required />
           </div>
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="consent"
+              name="consent"
+              required
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border border-input accent-primary"
+            />
+            <label htmlFor="consent" className="text-sm text-muted-foreground leading-snug">
+              Li e concordo com a{' '}
+              <Link href="/privacidade" target="_blank" className="text-primary underline">Política de Privacidade</Link>
+              {' '}e os{' '}
+              <Link href="/termos" target="_blank" className="text-primary underline">Termos de Uso</Link>
+            </label>
+          </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Criando...' : 'Criar conta'}

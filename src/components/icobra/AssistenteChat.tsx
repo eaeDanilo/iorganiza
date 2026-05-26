@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Bot, User, Loader2, Trash2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Trash2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+
+const LGPD_CONSENT_KEY = "icobra_ai_lgpd_consent";
 
 function renderMarkdown(text: string): React.ReactNode {
   return text.split("\n").map((line, i, arr) => {
@@ -78,12 +80,20 @@ export function AssistenteChat() {
   const [input, setInput] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [hidratado, setHidratado] = useState(false);
+  const [lgpdConsent, setLgpdConsent] = useState<boolean | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMensagens(carregarHistorico());
+    const consent = localStorage.getItem(LGPD_CONSENT_KEY);
+    setLgpdConsent(consent === "true");
     setHidratado(true);
   }, []);
+
+  function aceitarLgpd() {
+    localStorage.setItem(LGPD_CONSENT_KEY, "true");
+    setLgpdConsent(true);
+  }
 
   useEffect(() => {
     if (hidratado) salvarHistorico(mensagens);
@@ -161,6 +171,40 @@ export function AssistenteChat() {
       e.preventDefault();
       enviar();
     }
+  }
+
+  if (hidratado && lgpdConsent === false) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] flex-col items-center justify-center rounded-xl border bg-background shadow-sm p-8 text-center gap-6 max-w-md mx-auto">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+          <ShieldCheck className="h-7 w-7 text-muted-foreground" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Aviso de privacidade</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            O assistente iCobra usa inteligência artificial da{' '}
+            <strong>Anthropic Inc. (EUA)</strong>. As mensagens que você enviar,
+            incluindo nomes de devedores e valores de empréstimos, serão processadas
+            nos servidores da Anthropic conforme a{' '}
+            <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              Política de Privacidade
+            </a>{' '}
+            do iOrganiza.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Ao continuar, você consente com esse tratamento (Art. 7-I, LGPD).
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 w-full">
+          <Button onClick={aceitarLgpd} className="w-full">
+            Entendi e quero continuar
+          </Button>
+          <a href="/dashboard/icobra" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Voltar ao painel
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (

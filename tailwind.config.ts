@@ -16,18 +16,18 @@ const config: Config = {
     extend: {
       colors: {
         background: '#000000',
-        surface: '#0F1B12',
-        border: '#333333',
+        surface: '#111111',
+        border: '#2A2A2A',
         foreground: '#FFFFFF',
-        muted: { DEFAULT: '#152018', foreground: '#A0A0A0' },
+        muted: { DEFAULT: '#1A1A1A', foreground: '#888888' },
         primary: { DEFAULT: '#0066FF', foreground: '#FFFFFF' },
         secondary: { DEFAULT: '#FF0055', foreground: '#FFFFFF' },
         success: '#00D084',
         destructive: { DEFAULT: '#FF3B30', foreground: '#FFFFFF' },
         accent: { DEFAULT: '#0066FF', foreground: '#FFFFFF' },
-        card: { DEFAULT: '#0F1B12', foreground: '#FFFFFF' },
-        popover: { DEFAULT: '#0F1B12', foreground: '#FFFFFF' },
-        input: '#333333',
+        card: { DEFAULT: '#111111', foreground: '#FFFFFF' },
+        popover: { DEFAULT: '#111111', foreground: '#FFFFFF' },
+        input: '#2A2A2A',
         ring: '#0066FF',
       },
       borderRadius: {
@@ -44,7 +44,7 @@ const config: Config = {
       },
       backgroundImage: {
         'gradient-hero': 'linear-gradient(135deg, #0066FF 0%, #6B2EE6 50%, #FF0055 100%)',
-        'gradient-card': 'linear-gradient(180deg, rgba(15,27,18,1) 0%, rgba(10,20,13,1) 100%)',
+        'gradient-card': 'linear-gradient(180deg, rgba(17,17,17,1) 0%, rgba(10,10,10,1) 100%)',
         'gradient-stat': 'linear-gradient(135deg, rgba(0,102,255,0.15) 0%, rgba(255,0,85,0.08) 100%)',
       },
       fontFamily: {

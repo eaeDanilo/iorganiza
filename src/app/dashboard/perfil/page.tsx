@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +11,15 @@ import { translateAuthError } from '@/lib/auth-errors';
 
 export default function PerfilPage() {
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -38,6 +44,43 @@ export default function PerfilPage() {
       else setMsg('Perfil atualizado.');
     }
     setLoading(false);
+  }
+
+  async function exportarDados() {
+    setExporting(true);
+    try {
+      const res = await fetch('/api/users/me/export');
+      if (!res.ok) throw new Error('Falha na exportação');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `iorganiza-meus-dados-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('Erro ao exportar dados. Tente novamente.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function excluirConta() {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch('/api/users/me/delete', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Falha ao excluir conta');
+      await supabase.auth.signOut();
+      router.push('/');
+    } catch {
+      setError('Erro ao excluir conta. Contate eaedanilo1@gmail.com.');
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
   }
 
   async function changePassword(e: React.FormEvent<HTMLFormElement>) {
@@ -106,6 +149,45 @@ export default function PerfilPage() {
             </div>
             <Button type="submit" disabled={loading}>Alterar senha</Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Seus dados (LGPD)</CardTitle>
+          <CardDescription>
+            Exporte ou exclua seus dados conforme a Lei nº 13.709/2018.{' '}
+            <Link href="/privacidade" className="underline">Ver política de privacidade</Link>.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={exportarDados} disabled={exporting}>
+              {exporting ? 'Exportando...' : 'Exportar meus dados (JSON)'}
+            </Button>
+          </div>
+
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+            <p className="text-sm font-medium text-destructive">Zona de perigo</p>
+            <p className="text-sm text-muted-foreground">
+              A exclusão de conta cancela suas assinaturas ativas e agenda a remoção permanente
+              de todos os seus dados em 90 dias. Esta ação não pode ser desfeita.
+            </p>
+            {deleteConfirm ? (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="destructive" onClick={excluirConta} disabled={deleting}>
+                  {deleting ? 'Excluindo...' : 'Confirmar exclusão permanente'}
+                </Button>
+                <Button variant="outline" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <Button variant="destructive" onClick={excluirConta}>
+                Excluir minha conta
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
