@@ -1,11 +1,18 @@
 import type { Metadata } from 'next';
-import { Space_Grotesk } from 'next/font/google';
+import { Bebas_Neue, DM_Mono } from 'next/font/google';
 
-const grotesk = Space_Grotesk({
+const bebas = Bebas_Neue({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-grotesk',
-  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-bebas',
+  weight: '400',
+});
+
+const mono = DM_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono-dm',
+  weight: ['300', '400', '500'],
 });
 
 export const metadata: Metadata = {
@@ -15,10 +22,7 @@ export const metadata: Metadata = {
 
 export default function ICobraLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={grotesk.variable}
-      style={{ fontFamily: 'var(--font-grotesk)', fontFeatureSettings: '"tnum" 1' }}
-    >
+    <div className={`${bebas.variable} ${mono.variable}`}>
       {children}
     </div>
   );
