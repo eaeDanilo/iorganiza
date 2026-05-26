@@ -118,7 +118,7 @@ export function InadimplenciaCliente({ items }: { items: InadimplenteItem[] }) {
                       onClick={() => { setParaMarcar(i); setDataPagamento(hoje()); }}
                     >
                       <Check className="mr-1 h-4 w-4" />
-                      Pagar
+                      Marcar como pago
                     </Button>
                   </div>
                 </CardContent>
