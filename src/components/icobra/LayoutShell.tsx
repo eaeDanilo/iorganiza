@@ -24,13 +24,16 @@ export function ICobraLayoutShell({ children, userEmail, logoutButton }: Props) 
   return (
     <>
       <SplashScreen systemKey="icobra" bg="bg-[#0C1A10]">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00C853] shadow-[0_0_32px_rgba(0,200,83,0.35)]">
-            <svg width="28" height="28" viewBox="0 0 12 12" fill="none">
+        <div className="flex flex-col items-center gap-5">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#00C853] shadow-[0_0_40px_rgba(0,200,83,0.4)]">
+            <svg width="32" height="32" viewBox="0 0 12 12" fill="none">
               <path d="M2 6L5 9L10 3" stroke="#0C1A10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="text-4xl font-bold tracking-tight text-white">iCobra</span>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <span className="text-3xl font-bold tracking-tight text-white">Painel de controle</span>
+            <span className="text-sm text-white/40">de empréstimos e cobranças</span>
+          </div>
         </div>
       </SplashScreen>
     <div className="flex min-h-screen bg-[#0C1A10]">
