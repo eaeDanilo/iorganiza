@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
+      const meta = data.user.user_metadata as Record<string, unknown>;
+      if (!meta?.consented_at) {
+        await supabase.auth.updateUser({ data: { consented_at: new Date().toISOString() } });
+      }
       try {
         const name = (data.user.user_metadata?.full_name as string) || '';
         const t = emailTemplates.welcome(name);

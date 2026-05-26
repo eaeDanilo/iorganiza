@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
+import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 
 function LoginForm() {
   const router = useRouter();
@@ -30,10 +31,12 @@ function LoginForm() {
       return;
     }
     const raw = search.get('redirect') || '/dashboard';
-    const redirect = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
-    router.push(redirect);
+    const dest = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
+    router.push(dest);
     router.refresh();
   }
+
+  const redirect = search.get('redirect') || '/dashboard';
 
   return (
     <>
@@ -45,6 +48,15 @@ function LoginForm() {
           <p className="text-sm font-medium text-muted-foreground">Entrando...</p>
         </div>
       )}
+      <GoogleSignInButton redirectTo={redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard'} />
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">ou</span>
+        </div>
+      </div>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">E-mail</Label>

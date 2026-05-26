@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
+import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
@@ -100,6 +101,21 @@ export default function SignupPage() {
         <CardDescription>Comece a usar iOrganiza Hub em segundos.</CardDescription>
       </CardHeader>
       <CardContent>
+        <GoogleSignInButton />
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Ao continuar com Google, você concorda com nossa{' '}
+          <Link href="/privacidade" target="_blank" className="text-primary underline">Política de Privacidade</Link>
+          {' '}e os{' '}
+          <Link href="/termos" target="_blank" className="text-primary underline">Termos de Uso</Link>.
+        </p>
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">ou cadastre com e-mail</span>
+          </div>
+        </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="full_name">Nome completo</Label>
