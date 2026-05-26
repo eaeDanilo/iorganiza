@@ -93,6 +93,7 @@ export function AssistenteChat() {
   function aceitarLgpd() {
     localStorage.setItem(LGPD_CONSENT_KEY, "true");
     setLgpdConsent(true);
+    fetch("/api/icobra/consent", { method: "POST" }).catch(() => {});
   }
 
   useEffect(() => {

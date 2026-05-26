@@ -29,7 +29,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, consented_at: new Date().toISOString() },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
