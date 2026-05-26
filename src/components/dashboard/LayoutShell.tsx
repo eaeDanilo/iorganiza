@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { DashboardSidebar, DashboardSidebarContent } from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { SplashScreen } from "@/components/shared/SplashScreen";
 
 const SAAS_PREFIXES = ["/dashboard/icobra"];
 
@@ -38,6 +39,15 @@ export function LayoutShell({ children, userEmail, isAdmin, logoutButton, active
   }
 
   return (
+    <>
+      <SplashScreen systemKey="iorganiza" bg="bg-background">
+        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-hero text-4xl font-bold text-white shadow-glow">
+          iO
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          iOrganiza
+        </p>
+      </SplashScreen>
     <div className="flex min-h-screen">
       <DashboardSidebar activeSaas={activeSaas} />
 
@@ -90,5 +100,6 @@ export function LayoutShell({ children, userEmail, isAdmin, logoutButton, active
       </div>
       <Toaster richColors position="top-right" />
     </div>
+    </>
   );
 }
