@@ -116,7 +116,7 @@ export default function SignupPage() {
             <span className="bg-card px-2 text-muted-foreground">ou cadastre com e-mail</span>
           </div>
         </div>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} method="post" className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="full_name">Nome completo</Label>
             <Input id="full_name" name="full_name" required />

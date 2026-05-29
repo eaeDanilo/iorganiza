@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
         <CardDescription>Defina uma senha segura com no mínimo 8 caracteres.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} method="post" className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password">Nova senha</Label>
             <Input id="password" name="password" type="password" minLength={8} required autoComplete="new-password" />

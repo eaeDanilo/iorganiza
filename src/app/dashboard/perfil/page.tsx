@@ -138,7 +138,7 @@ export default function PerfilPage() {
           <CardDescription>Mínimo 8 caracteres. Deve ser diferente da atual.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={changePassword} className="space-y-4">
+          <form onSubmit={changePassword} method="post" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new_password">Nova senha</Label>
               <Input id="new_password" name="new_password" type="password" minLength={8} required autoComplete="new-password" />

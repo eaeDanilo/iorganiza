@@ -57,7 +57,7 @@ function LoginForm() {
           <span className="bg-card px-2 text-muted-foreground">ou</span>
         </div>
       </div>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} method="post" className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">E-mail</Label>
           <Input id="email" name="email" type="email" required />
