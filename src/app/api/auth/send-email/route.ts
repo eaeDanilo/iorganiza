@@ -35,10 +35,12 @@ const ACTION_TYPE_MAP: Record<string, 'signup' | 'recovery' | 'magiclink' | 'inv
 
 export async function POST(request: NextRequest) {
   const secret = process.env.SUPABASE_AUTH_HOOK_SECRET;
-  if (secret) {
-    const valid = await verifyHookSignature(request.headers.get('authorization'), secret);
-    if (!valid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  if (!secret) {
+    console.error('[send-email hook] SUPABASE_AUTH_HOOK_SECRET not configured');
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
+  const valid = await verifyHookSignature(request.headers.get('authorization'), secret);
+  if (!valid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const body = await request.json();
   const { user, email_data } = body as {

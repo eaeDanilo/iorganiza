@@ -8,13 +8,18 @@ export function GoogleSignInButton({ redirectTo = '/dashboard' }: { redirectTo?:
 
   async function signIn() {
     setLoading(true);
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
-      },
-    });
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+        },
+      });
+      if (error) setLoading(false);
+    } catch {
+      setLoading(false);
+    }
   }
 
   return (

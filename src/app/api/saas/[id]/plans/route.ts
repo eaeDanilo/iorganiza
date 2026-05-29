@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .eq('saas_id', id)
       .order('sort_order', { ascending: true });
 
-    if (error) return jsonError(error.message, 500, 'INTERNAL');
+    if (error) return jsonError('Erro interno', 500, 'INTERNAL');
     return jsonOk(data);
   } catch (err) {
     return handleError(err);
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .select()
       .single();
 
-    if (error) return jsonError(error.message, 500, 'INTERNAL');
+    if (error) return jsonError('Erro interno', 500, 'INTERNAL');
     return jsonOk(data);
   } catch (err) {
     return handleError(err);

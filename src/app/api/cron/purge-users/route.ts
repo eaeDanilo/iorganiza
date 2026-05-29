@@ -7,11 +7,13 @@ const CUTOFF_DAYS = 90;
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers.get('authorization');
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-    }
+  if (!secret) {
+    console.error('[purge-users] CRON_SECRET not configured');
+    return NextResponse.json({ error: 'not configured' }, { status: 500 });
+  }
+  const auth = req.headers.get('authorization');
+  if (auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
   const supabase = createSupabaseServiceClient();
@@ -54,5 +56,5 @@ export async function GET(req: NextRequest) {
   );
 
   console.log(`[purge-users] purged ${ids.length} users`);
-  return NextResponse.json({ purged: ids.length, ids });
+  return NextResponse.json({ purged: ids.length });
 }

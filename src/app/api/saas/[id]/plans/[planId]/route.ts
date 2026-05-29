@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       .select()
       .single();
 
-    if (error) return jsonError(error.message, 500, 'INTERNAL');
+    if (error) return jsonError('Erro interno', 500, 'INTERNAL');
     return jsonOk(data);
   } catch (err) {
     return handleError(err);
@@ -57,7 +57,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       .eq('id', planId)
       .eq('saas_id', id);
 
-    if (error) return jsonError(error.message, 500, 'INTERNAL');
+    if (error) return jsonError('Erro interno', 500, 'INTERNAL');
     return jsonOk(null);
   } catch (err) {
     return handleError(err);

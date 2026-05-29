@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,11 +10,19 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 
+const URL_ERROR_MAP: Record<string, string> = {
+  invalid_code: 'Falha ao autenticar com Google. Tente novamente.',
+  invalid_link: 'Link inválido. Solicite um novo.',
+  expired_link: 'Link expirado. Solicite um novo.',
+};
+
 function LoginForm() {
-  const router = useRouter();
   const search = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const urlError = search.get('error') ? (URL_ERROR_MAP[search.get('error')!] ?? search.get('error')) : null;
+  const [error, setError] = useState<string | null>(urlError);
+  const raw = search.get('redirect') || '/dashboard';
+  const safeRedirect = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,13 +38,8 @@ function LoginForm() {
       setError(translateAuthError(error.message));
       return;
     }
-    const raw = search.get('redirect') || '/dashboard';
-    const dest = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
-    router.push(dest);
-    router.refresh();
+    window.location.href = safeRedirect;
   }
-
-  const redirect = search.get('redirect') || '/dashboard';
 
   return (
     <>
@@ -48,7 +51,7 @@ function LoginForm() {
           <p className="text-sm font-medium text-muted-foreground">Entrando...</p>
         </div>
       )}
-      <GoogleSignInButton redirectTo={redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard'} />
+      <GoogleSignInButton redirectTo={safeRedirect} />
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />

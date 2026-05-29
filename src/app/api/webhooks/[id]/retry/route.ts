@@ -24,7 +24,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       await supabase.from('webhook_logs').update({
         status: 'failed', error_message: msg, processed_at: new Date().toISOString(),
       }).eq('id', id);
-      return jsonError(msg, 500);
+      return jsonError('Falha ao reprocessar webhook', 500);
     }
   } catch (e) { return handleError(e); }
 }

@@ -11,5 +11,5 @@ export function handleError(err: unknown) {
   if (msg === 'UNAUTHORIZED') return jsonError('Não autenticado', 401, 'UNAUTHORIZED');
   if (msg === 'FORBIDDEN') return jsonError('Sem permissão', 403, 'FORBIDDEN');
   console.error('[api]', err);
-  return jsonError(msg, 500, 'INTERNAL');
+  return jsonError('Erro interno', 500, 'INTERNAL');
 }

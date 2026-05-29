@@ -24,6 +24,8 @@ export function SplashScreen({ systemKey, bg, children }: Props) {
     return () => {
       clearTimeout(exitStart);
       clearTimeout(done);
+      // Strict Mode double-invokes effects: remove key so the real mount reschedules timers
+      sessionStorage.removeItem(key);
     };
   }, [systemKey]);
 
