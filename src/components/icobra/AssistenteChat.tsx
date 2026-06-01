@@ -42,7 +42,7 @@ const MSG_INICIAL: Mensagem = {
   id: "0",
   role: "assistant",
   content:
-    "Olá! Sou o assistente do iCobra. Posso criar empréstimos, listar clientes, marcar parcelas como pagas e muito mais. Como posso ajudar?",
+    "Oi! 👋 Bem-vindo ao iCobra!\n\nSou seu assistente de gestão de empréstimos pessoais. Posso ajudar você com:\n\n✅ Criar um novo empréstimo\n✅ Listar empréstimos ativos ou quitados\n✅ Ver detalhes de um empréstimo e suas parcelas\n✅ Marcar parcelas como pagas\n✅ Deletar um empréstimo\n✅ Consultar parcelas em atraso\n\nO que você gostaria de fazer? 😊",
   timestamp: 0,
 };
 
