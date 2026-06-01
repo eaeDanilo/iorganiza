@@ -26,18 +26,13 @@ export default async function AssistentePage() {
   if (icobraSaas) {
     const { data: sub } = await supabase
       .from("subscriptions")
-      .select("id, plan_id, saas_plans:plan_id(has_ai_chat)")
+      .select("id")
       .eq("user_id", user.id)
       .eq("saas_id", icobraSaas.id)
       .eq("status", "active")
       .maybeSingle();
 
-    if (sub) {
-      const plan = (sub as any).saas_plans;
-      // If subscription has no plan, it was created before plans existed — deny AI by default
-      // If plan exists, check has_ai_chat
-      hasAiAccess = plan?.has_ai_chat === true;
-    }
+    hasAiAccess = !!sub;
   }
 
   if (!hasAiAccess) {

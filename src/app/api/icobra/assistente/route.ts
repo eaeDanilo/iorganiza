@@ -476,7 +476,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Check that user's active iCobra subscription has a plan with has_ai_chat = true
+  // Check that user has an active iCobra subscription
   {
     const { data: icobraSaas } = await supabase
       .from("saas")
@@ -493,16 +493,15 @@ export async function POST(request: NextRequest) {
 
     const { data: sub } = await supabase
       .from("subscriptions")
-      .select("plan_id, saas_plans:plan_id(has_ai_chat)")
+      .select("id")
       .eq("user_id", authUser.id)
       .eq("saas_id", icobraSaas.id)
       .eq("status", "active")
       .maybeSingle();
 
-    const hasAiAccess = (sub as any)?.saas_plans?.has_ai_chat === true;
-    if (!hasAiAccess) {
+    if (!sub) {
       return NextResponse.json(
-        { error: "Plano não inclui o assistente IA. Faça upgrade para o plano Pro." },
+        { error: "Assinatura ativa do iCobra necessária para usar o assistente IA." },
         { status: 403 }
       );
     }
