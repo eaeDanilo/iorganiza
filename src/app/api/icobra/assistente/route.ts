@@ -530,8 +530,8 @@ export async function POST(request: NextRequest) {
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY não configurada no .env.local." },
-      { status: 500 }
+      { maintenance: true, error: "O assistente está temporariamente em manutenção." },
+      { status: 503 }
     );
   }
 

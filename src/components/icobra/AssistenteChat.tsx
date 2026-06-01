@@ -137,7 +137,9 @@ export function AssistenteChat() {
       });
 
       const json = await res.json();
-      const resposta = json.resposta ?? json.error ?? "Erro ao processar.";
+      const resposta = json.maintenance
+        ? "O assistente está temporariamente em manutenção. Tente novamente mais tarde."
+        : (json.resposta ?? json.error ?? "Erro ao processar.");
 
       setMensagens((prev) => [
         ...prev,
