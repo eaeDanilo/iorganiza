@@ -1,4 +1,5 @@
 import { SaasCard } from '@/components/catalog/SaasCard';
+import { ICobraBanner } from '@/components/catalog/ICobraBanner';
 import { getCurrentUser } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Saas, Subscription } from '@/types/database';
@@ -21,6 +22,10 @@ export default async function DashboardCatalogoPage() {
     <div>
       <h1 className="text-2xl font-bold sm:text-3xl">Catálogo</h1>
       <p className="mt-1 text-muted-foreground">Explore novos sistemas para adicionar à sua conta.</p>
+
+      <div className="mt-6">
+        <ICobraBanner />
+      </div>
 
       {available.length > 0 && (
         <section className="mt-8">

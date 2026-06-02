@@ -1,6 +1,7 @@
 import { Navbar } from '@/components/shared/Navbar';
 import { Footer } from '@/components/shared/Footer';
 import { SaasCard } from '@/components/catalog/SaasCard';
+import { ICobraBanner } from '@/components/catalog/ICobraBanner';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Saas } from '@/types/database';
 
@@ -25,6 +26,7 @@ export default async function CatalogoPage() {
             <h1 className="text-4xl font-bold">Catálogo</h1>
             <p className="mt-2 text-muted-foreground">Escolha os sistemas que você quer assinar.</p>
           </div>
+          <ICobraBanner />
           {saas.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-12 text-center">
               <p className="text-muted-foreground">Nenhum sistema disponível no momento.</p>
