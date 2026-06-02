@@ -20,4 +20,5 @@ coverage
 
 # Scripts com dados de usuários reais
 scripts/create-user-*.mjs
+scripts/create-icobra-*.mjs
 scripts/seed-*.mjs
