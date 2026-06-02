@@ -28,8 +28,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     }
     await supabase
       .from('subscriptions')
-      .update({ status: 'canceled', cancel_at: new Date().toISOString() })
+      .update({ status: 'canceling', cancel_at: sub.current_period_end ?? new Date().toISOString() })
       .eq('id', id);
+    const wantsJson = _req.headers.get('accept')?.includes('application/json');
+    if (wantsJson) return NextResponse.json({ ok: true });
     return NextResponse.redirect(new URL('/dashboard/meus-saas', _req.url));
   } catch (e) { return handleError(e); }
 }

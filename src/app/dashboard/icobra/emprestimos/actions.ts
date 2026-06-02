@@ -78,6 +78,19 @@ export async function editarEmprestimo(id: string, data: EmprestimoFormData) {
 
   const calculo = calcularEmprestimo(data);
 
+  const { data: parcelasExistentes } = await supabase
+    .from("parcelas")
+    .select("*")
+    .eq("emprestimo_id", id)
+    .eq("user_id", userId)
+    .order("numero");
+
+  const pagas = (parcelasExistentes ?? []).filter((p) => p.data_pagamento);
+  const totalPago = pagas.reduce((acc, p) => acc + Number(p.valor), 0);
+  const parcelasNaoPageasCount = data.numero_parcelas - pagas.length;
+  const totalAReceber = totalPago + Math.max(0, parcelasNaoPageasCount) * calculo.valor_parcela;
+  const lucro = totalAReceber - data.valor_emprestado;
+
   const { error: errUpdate } = await supabase
     .from("emprestimos")
     .update({
@@ -90,22 +103,13 @@ export async function editarEmprestimo(id: string, data: EmprestimoFormData) {
       data_primeiro_pagamento: data.data_primeiro_pagamento,
       dias_pagamento: data.dias_pagamento,
       valor_parcela: calculo.valor_parcela,
-      total_a_receber: calculo.total_a_receber,
-      lucro: calculo.lucro,
+      total_a_receber: totalAReceber,
+      lucro,
     })
     .eq("id", id)
     .eq("user_id", userId);
 
   if (errUpdate) throw new Error("Não foi possível atualizar: " + errUpdate.message);
-
-  const { data: parcelasExistentes } = await supabase
-    .from("parcelas")
-    .select("*")
-    .eq("emprestimo_id", id)
-    .eq("user_id", userId)
-    .order("numero");
-
-  const pagas = (parcelasExistentes ?? []).filter((p) => p.data_pagamento);
   const numerosPagos = new Set(pagas.map((p) => p.numero));
 
   await supabase.from("parcelas").delete().eq("emprestimo_id", id).eq("user_id", userId).is("data_pagamento", null);

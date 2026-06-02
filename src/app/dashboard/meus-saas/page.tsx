@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { subscriptionStatusLabel, paymentMethodLabel } from '@/lib/labels';
+import { CancelarAssinaturaButton } from '@/components/dashboard/CancelarAssinaturaButton';
 import type { Subscription, Saas } from '@/types/database';
 
 type SubWithSaas = Subscription & { saas: Saas };
@@ -39,7 +40,14 @@ export default async function MeusSaasPage() {
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-lg sm:text-xl">{s.saas.name}</CardTitle>
-                  <Badge variant={s.status === 'active' ? 'success' : s.status === 'pending' ? 'outline' : 'destructive'}>
+                  <Badge
+                    variant={
+                      s.status === 'active' ? 'success'
+                      : s.status === 'canceling' ? 'warning'
+                      : s.status === 'pending' ? 'outline'
+                      : 'destructive'
+                    }
+                  >
                     {subscriptionStatusLabel[s.status]}
                   </Badge>
                 </div>
@@ -64,15 +72,17 @@ export default async function MeusSaasPage() {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {s.status === 'active' && (
+                  {(s.status === 'active' || s.status === 'canceling') && (
                     <Button asChild className="w-full sm:w-auto">
                       <Link href={s.saas.external_url || `/dashboard/${s.saas.slug}`}>Acessar {s.saas.name}</Link>
                     </Button>
                   )}
                   {s.status === 'active' && (
-                    <form action={`/api/subscriptions/${s.id}/cancel`} method="post" className="w-full sm:w-auto">
-                      <Button variant="outline" type="submit" className="w-full sm:w-auto">Cancelar</Button>
-                    </form>
+                    <CancelarAssinaturaButton
+                      subscriptionId={s.id}
+                      saaName={s.saas.name}
+                      periodEnd={s.current_period_end}
+                    />
                   )}
                 </div>
               </CardContent>

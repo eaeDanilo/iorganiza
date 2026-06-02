@@ -39,7 +39,9 @@ export default async function EmprestimoDetalhesPage({ params }: { params: Promi
   const e = emprestimo as Emprestimo & { parcelas: Parcela[] };
   const parcelas = e.parcelas ?? [];
   const pagas = parcelas.filter((p) => p.data_pagamento);
+  const pendentes = parcelas.filter((p) => !p.data_pagamento);
   const totalRecebido = pagas.reduce((acc, p) => acc + Number(p.valor), 0);
+  const restanteAReceber = pendentes.reduce((acc, p) => acc + Number(p.valor), 0);
   const temAtraso = parcelas.some(
     (p) => calcularStatusParcela(p.data_vencimento, p.data_pagamento) === "atrasado"
   );
@@ -64,9 +66,9 @@ export default async function EmprestimoDetalhesPage({ params }: { params: Promi
 
       <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <InfoCard label="Valor emprestado" value={formatCurrency(Number(e.valor_emprestado))} />
-        <InfoCard label="Total a receber" value={formatCurrency(Number(e.total_a_receber))} />
+        <InfoCard label="Total contratado" value={formatCurrency(Number(e.total_a_receber))} />
         <InfoCard label="Recebido até agora" value={formatCurrency(totalRecebido)} color="text-success" />
-        <InfoCard label="Lucro previsto" value={formatCurrency(Number(e.lucro))} color="text-success" />
+        <InfoCard label="Restante a receber" value={formatCurrency(restanteAReceber)} />
       </div>
 
       <Card className="mb-6">

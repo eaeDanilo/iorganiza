@@ -493,13 +493,18 @@ export async function POST(request: NextRequest) {
 
     const { data: sub } = await supabase
       .from("subscriptions")
-      .select("id")
+      .select("id, status, cancel_at")
       .eq("user_id", authUser.id)
       .eq("saas_id", icobraSaas.id)
-      .eq("status", "active")
+      .in("status", ["active", "canceling"])
       .maybeSingle();
 
-    if (!sub) {
+    const hasAccess =
+      sub &&
+      (sub.status === "active" ||
+        (sub.status === "canceling" && sub.cancel_at && sub.cancel_at > new Date().toISOString()));
+
+    if (!hasAccess) {
       return NextResponse.json(
         { error: "Assinatura ativa do iCobra necessária para usar o assistente IA." },
         { status: 403 }

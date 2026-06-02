@@ -23,13 +23,18 @@ export async function getICobraPlan(userId: string): Promise<Plan> {
 
   const { data: sub } = await supabase
     .from('subscriptions')
-    .select('id')
+    .select('id, status, cancel_at')
     .eq('user_id', userId)
     .eq('saas_id', saas.id)
-    .eq('status', 'active')
+    .in('status', ['active', 'canceling'])
     .maybeSingle();
 
-  return sub ? 'paid' : 'free';
+  const hasAccess =
+    sub &&
+    (sub.status === 'active' ||
+      (sub.status === 'canceling' && sub.cancel_at && sub.cancel_at > new Date().toISOString()));
+
+  return hasAccess ? 'paid' : 'free';
 }
 
 export interface EmprestimoUsage {

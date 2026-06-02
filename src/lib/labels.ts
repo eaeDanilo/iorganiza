@@ -4,6 +4,7 @@ import type { SubscriptionStatus, PaymentMethod, PaymentStatus, SaasStatus, Webh
 
 export const subscriptionStatusLabel: Record<SubscriptionStatus, string> = {
   active: 'Ativa',
+  canceling: 'Cancelamento agendado',
   canceled: 'Cancelada',
   pending: 'Pendente',
   expired: 'Expirada',

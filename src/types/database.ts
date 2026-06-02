@@ -1,6 +1,6 @@
 export type UUID = string;
 
-export type SubscriptionStatus = 'active' | 'canceled' | 'pending' | 'expired';
+export type SubscriptionStatus = 'active' | 'canceling' | 'canceled' | 'pending' | 'expired';
 export type PaymentMethod = 'stripe' | 'kiwify' | 'hotmart' | 'kirvano' | 'manual';
 export type PaymentStatus = 'succeeded' | 'pending' | 'failed' | 'refunded';
 export type SaasStatus = 'active' | 'inactive';
