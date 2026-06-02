@@ -4,6 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/server';
 import { createICobraServiceClient } from '@/lib/icobra/supabase';
 
 const CUTOFF_DAYS = 90;
+const WEBHOOK_PAYLOAD_REDACT_DAYS = 30;
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
   const icobra = createICobraServiceClient();
 
   const cutoff = new Date(Date.now() - CUTOFF_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const webhookPayloadCutoff = new Date(Date.now() - WEBHOOK_PAYLOAD_REDACT_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: candidates, error: fetchErr } = await supabase
     .from('users')
@@ -54,6 +56,21 @@ export async function GET(req: NextRequest) {
   await Promise.allSettled(
     ids.map((id) => supabase.auth.admin.deleteUser(id))
   );
+
+  // Redact webhook payload PII after 30 days, delete logs after 90 days
+  const [redactResult, deleteWebhookResult] = await Promise.allSettled([
+    supabase
+      .from('webhook_logs')
+      .update({ payload: null })
+      .lt('created_at', webhookPayloadCutoff)
+      .not('payload', 'is', null),
+    supabase
+      .from('webhook_logs')
+      .delete()
+      .lt('created_at', cutoff),
+  ]);
+  if (redactResult.status === 'rejected') console.error('[purge-users] webhook redact error', redactResult.reason);
+  if (deleteWebhookResult.status === 'rejected') console.error('[purge-users] webhook delete error', deleteWebhookResult.reason);
 
   console.log(`[purge-users] purged ${ids.length} users`);
   return NextResponse.json({ purged: ids.length });
