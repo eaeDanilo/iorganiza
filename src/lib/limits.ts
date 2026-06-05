@@ -21,13 +21,18 @@ export async function getICobraPlan(userId: string): Promise<Plan> {
 
   if (!saas) return 'free';
 
-  const { data: sub } = await supabase
+  const { data: sub, error: subError } = await supabase
     .from('subscriptions')
     .select('id, status, cancel_at')
     .eq('user_id', userId)
     .eq('saas_id', saas.id)
     .in('status', ['active', 'canceling'])
     .maybeSingle();
+
+  if (subError) {
+    console.error('[getICobraPlan] subscription query failed:', subError.message);
+    return 'free';
+  }
 
   const hasAccess =
     sub &&

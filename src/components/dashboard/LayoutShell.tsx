@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 
-const SAAS_PREFIXES = ["/dashboard/icobra"];
+const SAAS_PREFIXES = ["/dashboard/icobra", "/dashboard/imaleta"];
 
 interface Props {
   children: React.ReactNode;

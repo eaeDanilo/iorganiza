@@ -1,5 +1,6 @@
 import { SaasCard } from '@/components/catalog/SaasCard';
 import { ICobraBanner } from '@/components/catalog/ICobraBanner';
+import { IMaletaBanner } from '@/components/catalog/IMaletaBanner';
 import { getCurrentUser } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Saas, Subscription } from '@/types/database';
@@ -25,6 +26,7 @@ export default async function DashboardCatalogoPage() {
 
       <div className="mt-6">
         <ICobraBanner />
+        <IMaletaBanner />
       </div>
 
       {available.length > 0 && (

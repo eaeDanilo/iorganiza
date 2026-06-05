@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { LayoutDashboard, Package, ShoppingBag, Receipt, User, Banknote, AppWindow } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Receipt, User, Banknote, Briefcase, AppWindow } from 'lucide-react';
 
 const items = [
   { href: '/dashboard', label: 'Início', icon: LayoutDashboard },
@@ -15,6 +15,7 @@ const items = [
 
 const SAAS_SLUG_CONFIG: Record<string, { href: string; icon: LucideIcon }> = {
   icobra: { href: '/dashboard/icobra', icon: Banknote },
+  imaleta: { href: '/dashboard/imaleta', icon: Briefcase },
 };
 
 interface SidebarProps {
