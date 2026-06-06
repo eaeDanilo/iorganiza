@@ -13,7 +13,7 @@ export default async function DashboardCatalogoPage() {
     supabase.from('subscriptions').select('saas_id, status, saas:saas(slug)').eq('user_id', user.id),
   ]);
   type SubRow = Pick<Subscription, 'saas_id' | 'status'> & { saas: { slug: string } | null };
-  const subList = (subs as SubRow[] ?? []).filter((s) => s.status === 'active' || s.status === 'pending');
+  const subList = ((subs as unknown as SubRow[]) ?? []).filter((s) => s.status === 'active' || s.status === 'pending');
   const ownedIds = new Set(subList.map((s) => s.saas_id));
   const ownedSlugs = new Set(subList.map((s) => s.saas?.slug).filter(Boolean) as string[]);
   const list = (saas ?? []) as Saas[];

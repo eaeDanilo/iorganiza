@@ -24,10 +24,10 @@ export default async function IMaletaDashboardLayout({
   const supabase = await createSupabaseServerClient();
   const { data: saas } = await supabase.from('saas').select('id').eq('slug', 'imaleta').single();
   const subscription = saas
-    ? (await supabase.from('subscriptions').select('payment_method').eq('user_id', user.id).eq('saas_id', saas.id).maybeSingle()).data
+    ? (await supabase.from('subscriptions').select('is_trial').eq('user_id', user.id).eq('saas_id', saas.id).maybeSingle()).data
     : null;
 
-  const isTrial = !subscription || subscription.payment_method === 'manual';
+  const isTrial = subscription?.is_trial === true;
 
   async function logoutAction() {
     "use server";

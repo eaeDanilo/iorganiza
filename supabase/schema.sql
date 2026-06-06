@@ -225,8 +225,13 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  insert into public.users (id, email, full_name)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', ''))
+  insert into public.users (id, email, full_name, consented_at)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    (new.raw_user_meta_data->>'consented_at')::timestamptz
+  )
   on conflict (id) do nothing;
   return new;
 end $$;

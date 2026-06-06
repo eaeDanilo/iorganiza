@@ -2,7 +2,7 @@ const path = require('path');
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const CSP = [
+const CSP_PROD = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://js.stripe.com https://accounts.google.com",
   "style-src 'self' 'unsafe-inline'",
@@ -16,12 +16,19 @@ const CSP = [
   "form-action 'self'",
 ].join('; ');
 
-const securityHeaders = [
-  { key: 'Content-Security-Policy', value: CSP },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+// Headers aplicados em todos os ambientes (proteções fundamentais, sem HSTS em dev)
+const baseSecurityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // camera=(self): iMaleta usa câmera para leitura de código de barras na conferência.
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+];
+
+// Headers extras apenas em produção
+const prodOnlyHeaders = [
+  { key: 'Content-Security-Policy', value: CSP_PROD },
+  // HSTS só em prod: forçar HTTPS em localhost quebraria o dev
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
@@ -30,8 +37,8 @@ const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: path.join(__dirname),
   async headers() {
-    if (!isProd) return [];
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    const headers = [...baseSecurityHeaders, ...(isProd ? prodOnlyHeaders : [])];
+    return [{ source: '/(.*)', headers }];
   },
 };
 
