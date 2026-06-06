@@ -8,9 +8,11 @@ const FEATURES = [
 
 interface ICobraBannerProps {
   slug?: string;
+  hasAccess?: boolean;
+  trialEnabled?: boolean;
 }
 
-export function ICobraBanner({ slug = 'icobra' }: ICobraBannerProps) {
+export function ICobraBanner({ slug = 'icobra', hasAccess = false, trialEnabled = false }: ICobraBannerProps) {
   return (
     <div
       className="relative mb-10 overflow-hidden rounded-xl"
@@ -77,13 +79,23 @@ export function ICobraBanner({ slug = 'icobra' }: ICobraBannerProps) {
         </ul>
 
         {/* CTA */}
-        <Link
-          href={`/saas/${slug}`}
-          className="inline-flex shrink-0 items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
-          style={{ background: '#00C853', color: '#0B1810' }}
-        >
-          Conhecer
-        </Link>
+        <div className="flex shrink-0 items-center gap-4">
+          {trialEnabled && !hasAccess && (
+            <Link
+              href="/trial/icobra"
+              className="text-sm text-white/45 underline underline-offset-4 transition-colors hover:text-white/75"
+            >
+              Testar
+            </Link>
+          )}
+          <Link
+            href={`/saas/${slug}`}
+            className="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
+            style={{ background: '#00C853', color: '#0B1810' }}
+          >
+            Conhecer
+          </Link>
+        </div>
       </div>
     </div>
   );

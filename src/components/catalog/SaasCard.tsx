@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import type { Saas } from '@/types/database';
 
-export function SaasCard({ saas }: { saas: Saas }) {
+export function SaasCard({ saas, hasAccess = false }: { saas: Saas; hasAccess?: boolean }) {
   const router = useRouter();
   const isActive = saas.status === 'active';
 
@@ -54,7 +54,16 @@ export function SaasCard({ saas }: { saas: Saas }) {
           <p className="text-2xl font-bold text-foreground">{formatCurrency(saas.price_monthly)}</p>
           <p className="text-xs text-muted-foreground">/mês</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {saas.trial_enabled && !hasAccess && (
+            <a
+              href={`/trial/${saas.slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+            >
+              Testar
+            </a>
+          )}
           <Button variant="outline" size="sm" onClick={goDetail}>
             Detalhes
           </Button>

@@ -8,9 +8,11 @@ const FEATURES = [
 
 interface IMaletaBannerProps {
   slug?: string;
+  hasAccess?: boolean;
+  trialEnabled?: boolean;
 }
 
-export function IMaletaBanner({ slug = "imaleta" }: IMaletaBannerProps) {
+export function IMaletaBanner({ slug = "imaleta", hasAccess = false, trialEnabled = false }: IMaletaBannerProps) {
   return (
     <div
       className="relative mb-10 overflow-hidden rounded-xl"
@@ -69,13 +71,23 @@ export function IMaletaBanner({ slug = "imaleta" }: IMaletaBannerProps) {
           ))}
         </ul>
 
-        <Link
-          href={`/saas/${slug}`}
-          className="inline-flex shrink-0 items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-150 hover:brightness-95 active:scale-[0.98]"
-          style={{ background: "#DEDAD3", color: "#1C1C1C" }}
-        >
-          Conhecer
-        </Link>
+        <div className="flex shrink-0 items-center gap-4">
+          {trialEnabled && !hasAccess && (
+            <Link
+              href="/trial/imaleta"
+              className="text-sm text-white/45 underline underline-offset-4 transition-colors hover:text-white/75"
+            >
+              Testar
+            </Link>
+          )}
+          <Link
+            href={`/saas/${slug}`}
+            className="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-150 hover:brightness-95 active:scale-[0.98]"
+            style={{ background: "#DEDAD3", color: "#1C1C1C" }}
+          >
+            Conhecer
+          </Link>
+        </div>
       </div>
     </div>
   );

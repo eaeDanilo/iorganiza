@@ -1,9 +1,20 @@
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export default async function ICobraLandingPage() {
   const user = await getCurrentUser();
   const ctaHref = user ? '/dashboard/icobra' : '/auth/signup';
+
+  const supabase = await createSupabaseServerClient();
+  const { data: saas } = await supabase.from('saas').select('id, trial_enabled').eq('slug', 'icobra').single();
+  const trialEnabled = saas?.trial_enabled ?? false;
+
+  let hasAccess = false;
+  if (user && saas) {
+    const { data: sub } = await supabase.from('subscriptions').select('id').eq('user_id', user.id).eq('saas_id', saas.id).maybeSingle();
+    hasAccess = !!sub;
+  }
 
   return (
     <div className="min-h-screen bg-[#0C1A10] text-white">
@@ -73,6 +84,14 @@ export default async function ICobraLandingPage() {
           >
             {user ? 'Acessar painel' : 'Começar grátis'}
           </Link>
+          {trialEnabled && !hasAccess && (
+            <Link
+              href="/trial/icobra"
+              className="text-sm text-white/50 underline underline-offset-4 hover:text-white/80 transition-colors"
+            >
+              Testar
+            </Link>
+          )}
           {!user && (
             <Link href="/auth/login?redirect=/dashboard/icobra" className="text-sm text-white/40 hover:text-white/70 transition-colors">
               Já tenho conta →

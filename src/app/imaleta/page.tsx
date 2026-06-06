@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const BG = "#181818";
 const ACCENT = "#DEDAD3";
@@ -7,6 +8,16 @@ const ACCENT = "#DEDAD3";
 export default async function IMaletaLandingPage() {
   const user = await getCurrentUser();
   const ctaHref = user ? "/dashboard/imaleta" : "/auth/signup";
+
+  const supabase = await createSupabaseServerClient();
+  const { data: saas } = await supabase.from('saas').select('id, trial_enabled').eq('slug', 'imaleta').single();
+  const trialEnabled = saas?.trial_enabled ?? false;
+
+  let hasAccess = false;
+  if (user && saas) {
+    const { data: sub } = await supabase.from('subscriptions').select('id').eq('user_id', user.id).eq('saas_id', saas.id).maybeSingle();
+    hasAccess = !!sub;
+  }
 
   return (
     <div className="min-h-screen text-white" style={{ background: BG }}>
@@ -105,6 +116,15 @@ export default async function IMaletaLandingPage() {
           >
             {user ? "Acessar painel" : "Começar grátis"}
           </Link>
+          {trialEnabled && !hasAccess && (
+            <Link
+              href="/trial/imaleta"
+              className="text-sm underline underline-offset-4 transition-colors hover:text-white/80"
+              style={{ color: "rgba(255,255,255,0.5)" }}
+            >
+              Testar
+            </Link>
+          )}
           {!user && (
             <Link
               href="/auth/login?redirect=/dashboard/imaleta"

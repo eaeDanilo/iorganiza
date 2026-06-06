@@ -17,6 +17,8 @@ export default async function CatalogoPage() {
     .is('deleted_at', null)
     .order('name');
   const saas = (data ?? []) as Saas[];
+  const icobraSaas = saas.find((s) => s.slug === 'icobra');
+  const imaletaSaas = saas.find((s) => s.slug === 'imaleta');
 
   return (
     <>
@@ -27,8 +29,8 @@ export default async function CatalogoPage() {
             <h1 className="text-4xl font-bold">Catálogo</h1>
             <p className="mt-2 text-muted-foreground">Escolha os sistemas que você quer assinar.</p>
           </div>
-          <ICobraBanner />
-          <IMaletaBanner />
+          <ICobraBanner trialEnabled={icobraSaas?.trial_enabled ?? false} />
+          <IMaletaBanner trialEnabled={imaletaSaas?.trial_enabled ?? false} />
           {saas.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-12 text-center">
               <p className="text-muted-foreground">Nenhum sistema disponível no momento.</p>

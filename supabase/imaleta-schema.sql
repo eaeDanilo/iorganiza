@@ -101,17 +101,21 @@ CREATE POLICY "owner_via_conf" ON imaleta.conferencia_items FOR ALL
   USING (EXISTS (SELECT 1 FROM imaleta.conferencias c WHERE c.id = conferencia_id AND c.user_id = auth.uid()));
 
 -- =========== SEED: iMaleta na tabela saas ===========
-INSERT INTO public.saas (name, slug, description, price_monthly, features, status)
+INSERT INTO public.saas (name, slug, description, price_monthly, features, status, trial_enabled, trial_max_uses)
 VALUES (
   'iMaleta',
   'imaleta',
   'Gerencie maletas de vendedores externos com código de barras. Monte maletas, envie com o vendedor e na conferência de retorno bipe os produtos para calcular automaticamente o que foi vendido no período.',
   29.00,
   '["Maletas por vendedor","Geração de código de barras Code 128","Conferência por câmera ou leitor USB","Cálculo automático de vendas","Impressão via impressora mobile","Histórico de conferências"]'::jsonb,
-  'active'
+  'active',
+  true,
+  3
 )
 ON CONFLICT (slug) DO UPDATE SET
-  name        = EXCLUDED.name,
-  description = EXCLUDED.description,
-  features    = EXCLUDED.features,
-  updated_at  = NOW();
+  name               = EXCLUDED.name,
+  description        = EXCLUDED.description,
+  features           = EXCLUDED.features,
+  trial_enabled      = EXCLUDED.trial_enabled,
+  trial_max_uses     = EXCLUDED.trial_max_uses,
+  updated_at         = NOW();

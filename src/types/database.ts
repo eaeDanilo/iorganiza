@@ -55,6 +55,8 @@ export interface Subscription {
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at: string | null;
+  is_trial: boolean;
+  trial_uses_remaining: number;
   created_at: string;
   updated_at: string;
 }
