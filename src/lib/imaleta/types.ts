@@ -5,6 +5,7 @@ export interface Produto {
   descricao: string | null;
   codigo_barras: string;
   preco: number | null;
+  imagem_url: string | null;
   status: "active" | "inactive";
   created_at: string;
   updated_at: string;
@@ -54,7 +55,13 @@ export interface Conferencia {
   status: "em_andamento" | "finalizada";
   created_at: string;
   finalizada_at: string | null;
-  maletas?: { nome: string; vendedores?: { nome: string } };
+  deleted_at: string | null;
+  maletas?: {
+    nome: string;
+    periodo_inicio: string;
+    periodo_fim: string | null;
+    vendedores?: { nome: string };
+  };
 }
 
 export interface ConferenciaItem {

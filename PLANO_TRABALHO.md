@@ -1,37 +1,5 @@
 # 📋 Plano de Trabalho — iOrganiza Hub
 > Gerado em: 05/06/2026 | Branch: `main` (up to date com origin)
-
----
-
-## 🔴 URGENTE — Commits pendentes
-
-**Há 19 arquivos modificados que NÃO foram commitados.**
-A maioria parece ser atualização de dependências (Next.js 15) + diferenças de line-endings (CRLF→LF), mas inclui mudanças reais em rotas de API e pages.
-
-Arquivos modificados sem commit:
-```
-next.config.js
-package.json / package-lock.json     ← Next.js atualizado para ^15.5.18
-src/app/api/auth/send-email/route.ts
-src/app/api/cron/purge-users/route.ts
-src/app/api/icobra/assistente/route.ts
-src/app/api/users/me/export/route.ts
-src/app/auth/forgot-password/page.tsx
-src/app/auth/login/page.tsx
-src/app/auth/reset-password/page.tsx
-src/app/auth/signup/page.tsx
-src/app/dashboard/catalogo/page.tsx
-src/app/dashboard/icobra/layout.tsx
-src/app/dashboard/imaleta/layout.tsx
-src/app/globals.css
-src/app/layout.tsx
-src/app/page.tsx
-src/components/CookieConsent.tsx
-tailwind.config.ts
-```
-
-**Ação:** Revisar o diff, separar por contexto e commitar em grupos lógicos.
-
 ---
 
 ## ✅ O que foi feito recentemente (últimos commits)

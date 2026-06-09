@@ -16,6 +16,7 @@ export default async function MaletasPage() {
       .select("*, vendedores(nome)")
       .eq("user_id", user.id)
       .is("deleted_at", null)
+      .neq("status", "conferida")
       .order("created_at", { ascending: false }),
     supabase
       .from("vendedores")

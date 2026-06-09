@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { createIMaletaServiceClient } from "@/lib/imaleta/supabase";
+import { createIMaletaServiceClient, createIMaletaStorageClient } from "@/lib/imaleta/supabase";
+import type { Produto } from "@/lib/imaleta/types";
 
 async function getUserId() {
   const user = await getCurrentUser();
@@ -72,29 +73,56 @@ export async function excluirVendedor(id: string) {
 
 // ─── Produtos ────────────────────────────────────────────────────────────────
 
+export async function uploadProdutoImagem(formData: FormData): Promise<string> {
+  const userId = await getUserId();
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) throw new Error("Arquivo inválido");
+  if (file.size > 5 * 1024 * 1024) throw new Error("Imagem deve ter no máximo 5MB");
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${userId}/produtos/${Date.now()}.${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const storage = createIMaletaStorageClient();
+  const { error } = await storage.storage
+    .from("imaleta-imagens")
+    .upload(path, buffer, { contentType: file.type, upsert: true });
+  if (error) throw new Error("Erro ao fazer upload: " + error.message);
+
+  const { data } = storage.storage.from("imaleta-imagens").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function criarProduto(data: {
   nome: string;
   descricao?: string;
   preco?: number;
   codigo_barras?: string;
-}) {
+  imagem_url?: string | null;
+}): Promise<Produto> {
   const userId = await getUserId();
   const supabase = createIMaletaServiceClient();
   const codigo = data.codigo_barras?.trim() || gerarCodigoBarras();
-  const { error } = await supabase.from("produtos").insert({
-    user_id: userId,
-    nome: data.nome.trim(),
-    descricao: data.descricao?.trim() || null,
-    preco: data.preco ?? null,
-    codigo_barras: codigo,
-  });
+  const { data: row, error } = await supabase
+    .from("produtos")
+    .insert({
+      user_id: userId,
+      nome: data.nome.trim(),
+      descricao: data.descricao?.trim() || null,
+      preco: data.preco ?? null,
+      codigo_barras: codigo,
+      imagem_url: data.imagem_url ?? null,
+    })
+    .select()
+    .single();
   if (error) throw new Error("Erro ao criar produto: " + error.message);
   revalidatePath("/dashboard/imaleta/produtos");
+  return row as Produto;
 }
 
 export async function atualizarProduto(
   id: string,
-  data: { nome: string; descricao?: string; preco?: number }
+  data: { nome: string; descricao?: string; preco?: number; imagem_url?: string | null }
 ) {
   const userId = await getUserId();
   const supabase = createIMaletaServiceClient();
@@ -104,6 +132,7 @@ export async function atualizarProduto(
       nome: data.nome.trim(),
       descricao: data.descricao?.trim() || null,
       preco: data.preco ?? null,
+      imagem_url: data.imagem_url ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -250,6 +279,85 @@ export async function adicionarItemConferencia(
 
   revalidatePath("/dashboard/imaleta/conferencia");
   return produto.id as string;
+}
+
+export async function buscarItensMaleta(maletaId: string) {
+  const supabase = createIMaletaServiceClient();
+  const { data, error } = await supabase
+    .from("maleta_items")
+    .select("*, produtos(nome, codigo_barras, preco)")
+    .eq("maleta_id", maletaId);
+  if (error) throw new Error("Erro ao buscar itens: " + error.message);
+  return data ?? [];
+}
+
+export async function buscarItensConferencia(conferenciaId: string) {
+  const supabase = createIMaletaServiceClient();
+  const { data, error } = await supabase
+    .from("conferencia_items")
+    .select("*, produtos(nome, codigo_barras)")
+    .eq("conferencia_id", conferenciaId);
+  if (error) throw new Error("Erro ao buscar itens conferência: " + error.message);
+  return data ?? [];
+}
+
+export async function buscarHistoricoConferencias() {
+  const userId = await getUserId();
+  const supabase = createIMaletaServiceClient();
+  const { data, error } = await supabase
+    .from("conferencias")
+    .select("*, maletas(nome, periodo_inicio, periodo_fim, vendedores(nome))")
+    .eq("user_id", userId)
+    .eq("status", "finalizada")
+    .is("deleted_at", null)
+    .order("finalizada_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error("Erro ao buscar histórico: " + error.message);
+  return data ?? [];
+}
+
+export async function buscarDetalhesConferencia(id: string) {
+  const userId = await getUserId();
+  const supabase = createIMaletaServiceClient();
+
+  const { data: conf, error } = await supabase
+    .from("conferencias")
+    .select("*, maletas(nome, periodo_inicio, periodo_fim, vendedores(nome))")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .single();
+
+  if (error || !conf) throw new Error("Conferência não encontrada");
+
+  const [{ data: confItems }, { data: maletaItems }] = await Promise.all([
+    supabase
+      .from("conferencia_items")
+      .select("*, produtos(nome, codigo_barras, preco)")
+      .eq("conferencia_id", id),
+    supabase
+      .from("maleta_items")
+      .select("*, produtos(nome, codigo_barras, preco)")
+      .eq("maleta_id", conf.maleta_id),
+  ]);
+
+  return {
+    conf,
+    confItems: confItems ?? [],
+    maletaItems: maletaItems ?? [],
+  };
+}
+
+export async function excluirRegistroConferencia(id: string) {
+  const userId = await getUserId();
+  const supabase = createIMaletaServiceClient();
+  const { error } = await supabase
+    .from("conferencias")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw new Error("Erro ao excluir registro: " + error.message);
+  revalidatePath("/dashboard/imaleta/conferencia");
 }
 
 export async function finalizarConferencia(

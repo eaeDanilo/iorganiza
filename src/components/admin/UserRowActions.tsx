@@ -16,6 +16,7 @@ export function UserRowActions({ userId, targetEmail, targetIsAdmin, targetIsSup
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const isSelf = userId === currentUserId;
 
   async function patch(body: Record<string, unknown>) {
@@ -94,20 +95,40 @@ export function UserRowActions({ userId, targetEmail, targetIsAdmin, targetIsSup
           <ShieldMinus className="h-3.5 w-3.5" />
         </Button>
       )}
-      {!isSelf && (
+      {!isSelf && !confirmDelete && (
         <Button
           size="sm"
           variant="ghost"
           disabled={busy}
           title={`Remover usuário ${targetEmail}`}
           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={() => {
-            if (!confirm(`Remover o usuário ${targetEmail}? Esta ação não pode ser desfeita.`)) return;
-            run('delete', remove);
-          }}
+          onClick={() => setConfirmDelete(true)}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
+      )}
+      {!isSelf && confirmDelete && (
+        <div className="flex items-center gap-1 rounded border border-destructive/40 bg-destructive/5 px-2 py-1">
+          <span className="text-xs text-muted-foreground">Remover?</span>
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={busy}
+            className="h-6 px-2 text-xs"
+            onClick={() => { setConfirmDelete(false); run('delete', remove); }}
+          >
+            Sim
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={busy}
+            className="h-6 px-2 text-xs"
+            onClick={() => setConfirmDelete(false)}
+          >
+            Não
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -22,6 +22,7 @@ export function SaasPlansManager({ saasId, initialPlans }: Props) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmPlanId, setConfirmPlanId] = useState<string | null>(null);
 
   function openCreate() {
     setEditing(null);
@@ -90,12 +91,12 @@ export function SaasPlansManager({ saasId, initialPlans }: Props) {
     cancelForm();
   }
 
-  async function onDelete(plan: SaasPlan) {
-    if (!confirm(`Excluir plano "${plan.name}"?`)) return;
+  async function onDelete(planId: string) {
     setLoading(true);
-    await fetch(`/api/saas/${saasId}/plans/${plan.id}`, { method: 'DELETE' });
-    setPlans((prev) => prev.filter((p) => p.id !== plan.id));
+    await fetch(`/api/saas/${saasId}/plans/${planId}`, { method: 'DELETE' });
+    setPlans((prev) => prev.filter((p) => p.id !== planId));
     setLoading(false);
+    setConfirmPlanId(null);
   }
 
   const showForm = creating || !!editing;
@@ -130,9 +131,17 @@ export function SaasPlansManager({ saasId, initialPlans }: Props) {
                 {plan.has_ai_chat && <Badge variant="outline" className="text-xs">IA</Badge>}
                 {plan.is_default && <Badge variant="secondary" className="text-xs">Padrão</Badge>}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => openEdit(plan)}>Editar</Button>
-                <Button size="sm" variant="destructive" onClick={() => onDelete(plan)} disabled={loading}>Excluir</Button>
+                {confirmPlanId === plan.id ? (
+                  <div className="flex items-center gap-1 rounded border border-destructive/40 bg-destructive/5 px-2 py-1">
+                    <span className="text-xs text-muted-foreground">Excluir?</span>
+                    <Button size="sm" variant="destructive" onClick={() => onDelete(plan.id)} disabled={loading} className="h-6 px-2 text-xs">Sim</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmPlanId(null)} disabled={loading} className="h-6 px-2 text-xs">Não</Button>
+                  </div>
+                ) : (
+                  <Button size="sm" variant="destructive" onClick={() => setConfirmPlanId(plan.id)} disabled={loading}>Excluir</Button>
+                )}
               </div>
             </div>
           ))}

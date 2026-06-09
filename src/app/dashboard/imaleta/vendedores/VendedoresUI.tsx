@@ -23,6 +23,7 @@ export function VendedoresUI({ initial }: { initial: Vendedor[] }) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(empty);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function startEdit(v: Vendedor) {
@@ -61,7 +62,8 @@ export function VendedoresUI({ initial }: { initial: Vendedor[] }) {
     });
   }
 
-  function handleDelete(id: string) {
+  function handleDeleteConfirm(id: string) {
+    setConfirmId(null);
     startTransition(async () => {
       try {
         await excluirVendedor(id);
@@ -137,13 +139,39 @@ export function VendedoresUI({ initial }: { initial: Vendedor[] }) {
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <button
-                    onClick={() => handleDelete(v.id)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
-                    style={{ color: "rgba(255,255,255,0.3)" }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  {confirmId === v.id ? (
+                    <div
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-1"
+                      style={{ background: "rgba(255,80,80,0.08)", outline: "1px solid rgba(255,80,80,0.2)" }}
+                    >
+                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Excluir?</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteConfirm(v.id)}
+                        disabled={isPending}
+                        className="rounded px-2 py-0.5 text-xs font-medium transition-colors hover:bg-red-500/20 disabled:pointer-events-none"
+                        style={{ color: "#ff6b6b" }}
+                      >
+                        Sim
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmId(null)}
+                        className="rounded px-2 py-0.5 text-xs transition-colors hover:bg-white/5"
+                        style={{ color: "rgba(255,255,255,0.4)" }}
+                      >
+                        Não
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmId(v.id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             )

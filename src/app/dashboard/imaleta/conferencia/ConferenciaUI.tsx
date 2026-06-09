@@ -15,8 +15,9 @@ import {
   criarConferencia,
   adicionarItemConferencia,
   finalizarConferencia,
+  buscarItensMaleta,
+  buscarItensConferencia,
 } from "../actions";
-import { createIMaletaServiceClient } from "@/lib/imaleta/supabase";
 
 const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";
@@ -131,11 +132,7 @@ export function ConferenciaUI({
     startTransition(async () => {
       try {
         const confId = await criarConferencia(selectedMaletaId);
-        const supabase = createIMaletaServiceClient();
-        const { data } = await supabase
-          .from("maleta_items")
-          .select("*, produtos(nome, codigo_barras, preco)")
-          .eq("maleta_id", selectedMaletaId);
+        const data = await buscarItensMaleta(selectedMaletaId);
         setMaletaItems((data as MaletaItemComProduto[]) ?? []);
         setConferenciaId(confId);
         setStep("scanning");
@@ -150,16 +147,9 @@ export function ConferenciaUI({
   async function handleResumePendente() {
     const conf = resumePendente;
     if (!conf) return;
-    const supabase = createIMaletaServiceClient();
-    const [{ data: items }, { data: confItems }] = await Promise.all([
-      supabase
-        .from("maleta_items")
-        .select("*, produtos(nome, codigo_barras, preco)")
-        .eq("maleta_id", conf.maleta_id),
-      supabase
-        .from("conferencia_items")
-        .select("*, produtos(nome, codigo_barras)")
-        .eq("conferencia_id", conf.id),
+    const [items, confItems] = await Promise.all([
+      buscarItensMaleta(conf.maleta_id),
+      buscarItensConferencia(conf.id),
     ]);
     setMaletaItems((items as MaletaItemComProduto[]) ?? []);
     setConferenciaId(conf.id);

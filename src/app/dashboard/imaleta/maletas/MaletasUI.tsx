@@ -44,6 +44,7 @@ export function MaletasUI({
     new Date().toISOString().slice(0, 10)
   );
   const [items, setItems] = useState<ItemEntry[]>([]);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const selectStyle = {
@@ -101,7 +102,8 @@ export function MaletasUI({
     });
   }
 
-  function handleDelete(id: string) {
+  function handleDeleteConfirm(id: string) {
+    setConfirmId(null);
     startTransition(async () => {
       try {
         await excluirMaleta(id);
@@ -241,9 +243,39 @@ export function MaletasUI({
                   {statusLabel[m.status] ?? m.status}
                 </span>
                 {m.status === "aberta" && (
-                  <button onClick={() => handleDelete(m.id)} className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10" style={{ color: "rgba(255,255,255,0.3)" }}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  confirmId === m.id ? (
+                    <div
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-1"
+                      style={{ background: "rgba(255,80,80,0.08)", outline: "1px solid rgba(255,80,80,0.2)" }}
+                    >
+                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Excluir?</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteConfirm(m.id)}
+                        disabled={isPending}
+                        className="rounded px-2 py-0.5 text-xs font-medium transition-colors hover:bg-red-500/20 disabled:pointer-events-none"
+                        style={{ color: "#ff6b6b" }}
+                      >
+                        Sim
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmId(null)}
+                        className="rounded px-2 py-0.5 text-xs transition-colors hover:bg-white/5"
+                        style={{ color: "rgba(255,255,255,0.4)" }}
+                      >
+                        Não
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmId(m.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )
                 )}
               </div>
             </div>
