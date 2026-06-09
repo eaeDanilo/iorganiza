@@ -11,6 +11,17 @@ const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";
 const CARD = "rgba(255,255,255,0.03)";
 
+const inputStyle = {
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(222,218,211,0.1)",
+  color: "white",
+  borderRadius: "8px",
+  padding: "8px 12px",
+  fontSize: "14px",
+  width: "100%",
+  outline: "none",
+} as const;
+
 interface FormState {
   nome: string;
   descricao: string;
@@ -19,6 +30,177 @@ interface FormState {
 }
 
 const empty: FormState = { nome: "", descricao: "", preco: "", codigo_barras: "" };
+
+interface ImagePickerProps {
+  imagemPreview: string | null;
+  imagemUrlAtual: string | null;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemove: () => void;
+}
+
+function ImagePicker({ imagemPreview, imagemUrlAtual, fileInputRef, onFileChange, onRemove }: ImagePickerProps) {
+  const display = imagemPreview ?? imagemUrlAtual;
+  return (
+    <div className="flex items-start gap-3">
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        title={display ? "Trocar foto" : "Adicionar foto"}
+        className="relative flex-shrink-0 overflow-hidden rounded-lg transition-opacity hover:opacity-80"
+        style={{
+          width: 72,
+          height: 72,
+          background: display ? undefined : "rgba(255,255,255,0.05)",
+          border: display ? "none" : "1px dashed rgba(222,218,211,0.2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {display ? (
+          <img src={display} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <ImageIcon style={{ color: "rgba(255,255,255,0.2)", width: 22, height: 22 }} />
+        )}
+      </button>
+      <div className="flex flex-col justify-center gap-1 pt-1">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="text-left text-xs transition-colors hover:brightness-90"
+          style={{ color: ACCENT }}
+        >
+          {display ? "Trocar foto" : "Adicionar foto"}
+        </button>
+        {display && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-left text-xs transition-colors"
+            style={{ color: "rgba(255,255,255,0.35)" }}
+          >
+            Remover
+          </button>
+        )}
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+          JPG, PNG, WEBP · máx 5MB
+        </p>
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={onFileChange}
+        style={{ display: "none" }}
+      />
+    </div>
+  );
+}
+
+interface ProductFormProps {
+  title: string;
+  showBarcode?: boolean;
+  form: FormState;
+  onChange: (form: FormState) => void;
+  imagemPreview: string | null;
+  imagemUrlAtual: string | null;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveImagem: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+}
+
+function ProductForm({
+  title,
+  showBarcode,
+  form,
+  onChange,
+  imagemPreview,
+  imagemUrlAtual,
+  fileInputRef,
+  onFileChange,
+  onRemoveImagem,
+  onSave,
+  onCancel,
+  isPending,
+}: ProductFormProps) {
+  return (
+    <div
+      className="mb-4 rounded-xl p-5"
+      style={{ background: "rgba(255,255,255,0.04)", outline: "1px solid rgba(222,218,211,0.12)" }}
+    >
+      <p className="mb-4 text-sm font-semibold text-white">{title}</p>
+      <div className="mb-4">
+        <ImagePicker
+          imagemPreview={imagemPreview}
+          imagemUrlAtual={imagemUrlAtual}
+          fileInputRef={fileInputRef}
+          onFileChange={onFileChange}
+          onRemove={onRemoveImagem}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <input
+          placeholder="Nome *"
+          value={form.nome}
+          onChange={(e) => onChange({ ...form, nome: e.target.value })}
+          style={inputStyle}
+        />
+        {showBarcode ? (
+          <input
+            placeholder="Código de barras (deixe vazio para gerar)"
+            value={form.codigo_barras}
+            onChange={(e) => onChange({ ...form, codigo_barras: e.target.value })}
+            style={inputStyle}
+          />
+        ) : (
+          <input
+            value={form.codigo_barras}
+            disabled
+            style={{ ...inputStyle, opacity: 0.4, cursor: "not-allowed" }}
+          />
+        )}
+        <input
+          placeholder="Descrição"
+          value={form.descricao}
+          onChange={(e) => onChange({ ...form, descricao: e.target.value })}
+          style={inputStyle}
+        />
+        <input
+          placeholder="Preço (R$)"
+          type="number"
+          step="0.01"
+          value={form.preco}
+          onChange={(e) => onChange({ ...form, preco: e.target.value })}
+          style={inputStyle}
+        />
+      </div>
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={onSave}
+          disabled={isPending}
+          className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95 disabled:opacity-50"
+          style={{ background: ACCENT, color: "#1C1C1C" }}
+        >
+          <Check className="h-3.5 w-3.5" />
+          {isPending ? "Salvando…" : "Salvar"}
+        </button>
+        <button
+          onClick={onCancel}
+          disabled={isPending}
+          className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm transition-colors hover:bg-white/[0.06]"
+          style={{ color: "rgba(255,255,255,0.5)" }}
+        >
+          <X className="h-3.5 w-3.5" />
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function ProdutosUI({ initial }: { initial: Produto[] }) {
   const [produtos, setProdutos] = useState(initial);
@@ -46,6 +228,13 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     setImagemFile(file);
     setImagemPreview(URL.createObjectURL(file));
     e.target.value = "";
+  }
+
+  function handleRemoveImagem() {
+    if (imagemPreview) URL.revokeObjectURL(imagemPreview);
+    setImagemFile(null);
+    setImagemPreview(null);
+    setImagemUrlAtual(null);
   }
 
   function startEdit(p: Produto) {
@@ -138,156 +327,31 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     });
   }
 
-  const inputStyle = {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(222,218,211,0.1)",
-    color: "white",
-    borderRadius: "8px",
-    padding: "8px 12px",
-    fontSize: "14px",
-    width: "100%",
-    outline: "none",
+  const sharedFormProps = {
+    form,
+    onChange: setForm,
+    imagemPreview,
+    imagemUrlAtual,
+    fileInputRef,
+    onFileChange: handleFileChange,
+    onRemoveImagem: handleRemoveImagem,
+    onSave: handleSave,
+    onCancel: handleCancel,
+    isPending,
   };
-
-  function ImagePicker() {
-    const display = imagemPreview ?? imagemUrlAtual;
-    return (
-      <div className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          title={display ? "Trocar foto" : "Adicionar foto"}
-          className="relative flex-shrink-0 overflow-hidden rounded-lg transition-opacity hover:opacity-80"
-          style={{
-            width: 72,
-            height: 72,
-            background: display ? undefined : "rgba(255,255,255,0.05)",
-            border: display ? "none" : "1px dashed rgba(222,218,211,0.2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {display ? (
-            <img src={display} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <ImageIcon style={{ color: "rgba(255,255,255,0.2)", width: 22, height: 22 }} />
-          )}
-        </button>
-        <div className="flex flex-col justify-center gap-1 pt-1">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="text-left text-xs transition-colors hover:brightness-90"
-            style={{ color: ACCENT }}
-          >
-            {display ? "Trocar foto" : "Adicionar foto"}
-          </button>
-          {display && (
-            <button
-              type="button"
-              onClick={() => {
-                if (imagemPreview) URL.revokeObjectURL(imagemPreview);
-                setImagemFile(null);
-                setImagemPreview(null);
-                setImagemUrlAtual(null);
-              }}
-              className="text-left text-xs transition-colors"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            >
-              Remover
-            </button>
-          )}
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-            JPG, PNG, WEBP · máx 5MB
-          </p>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-      </div>
-    );
-  }
-
-  function ProductForm({ title, showBarcode }: { title: string; showBarcode?: boolean }) {
-    return (
-      <div
-        className="mb-4 rounded-xl p-5"
-        style={{ background: "rgba(255,255,255,0.04)", outline: "1px solid rgba(222,218,211,0.12)" }}
-      >
-        <p className="mb-4 text-sm font-semibold text-white">{title}</p>
-        <div className="mb-4">
-          <ImagePicker />
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <input
-            placeholder="Nome *"
-            value={form.nome}
-            onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            style={inputStyle}
-          />
-          {showBarcode ? (
-            <input
-              placeholder="Código de barras (deixe vazio para gerar)"
-              value={form.codigo_barras}
-              onChange={(e) => setForm({ ...form, codigo_barras: e.target.value })}
-              style={inputStyle}
-            />
-          ) : (
-            <input
-              value={form.codigo_barras}
-              disabled
-              style={{ ...inputStyle, opacity: 0.4, cursor: "not-allowed" }}
-            />
-          )}
-          <input
-            placeholder="Descrição"
-            value={form.descricao}
-            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            style={inputStyle}
-          />
-          <input
-            placeholder="Preço (R$)"
-            type="number"
-            step="0.01"
-            value={form.preco}
-            onChange={(e) => setForm({ ...form, preco: e.target.value })}
-            style={inputStyle}
-          />
-        </div>
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={handleSave}
-            disabled={isPending}
-            className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95 disabled:opacity-50"
-            style={{ background: ACCENT, color: "#1C1C1C" }}
-          >
-            <Check className="h-3.5 w-3.5" />
-            {isPending ? "Salvando…" : "Salvar"}
-          </button>
-          <button
-            onClick={handleCancel}
-            disabled={isPending}
-            className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm transition-colors hover:bg-white/[0.06]"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-          >
-            <X className="h-3.5 w-3.5" />
-            Cancelar
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>
       <div className="mb-4 flex justify-end">
         <button
-          onClick={() => { setShowForm(true); setEditingId(null); setForm(empty); setImagemFile(null); setImagemPreview(null); setImagemUrlAtual(null); }}
+          onClick={() => {
+            setShowForm(true);
+            setEditingId(null);
+            setForm(empty);
+            setImagemFile(null);
+            setImagemPreview(null);
+            setImagemUrlAtual(null);
+          }}
           className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95"
           style={{ background: ACCENT, color: "#1C1C1C" }}
         >
@@ -296,7 +360,9 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
         </button>
       </div>
 
-      {showForm && !editingId && <ProductForm title="Novo produto" showBarcode />}
+      {showForm && !editingId && (
+        <ProductForm title="Novo produto" showBarcode {...sharedFormProps} />
+      )}
 
       {produtos.length === 0 && !showForm ? (
         <div className="rounded-xl p-10 text-center" style={{ background: CARD, outline: `1px solid ${BORDER}` }}>
@@ -306,14 +372,13 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
         <div className="space-y-2">
           {produtos.map((p) =>
             editingId === p.id ? (
-              <ProductForm key={p.id} title="Editar produto" />
+              <ProductForm key={p.id} title="Editar produto" {...sharedFormProps} />
             ) : (
               <div
                 key={p.id}
                 className="flex items-center gap-3 rounded-xl px-4 py-3"
                 style={{ background: CARD, outline: `1px solid ${BORDER}` }}
               >
-                {/* Thumbnail */}
                 {p.imagem_url ? (
                   <img
                     src={p.imagem_url}
@@ -330,7 +395,6 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
                   </div>
                 )}
 
-                {/* Info */}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-white">{p.nome}</p>
                   <p className="mt-0.5 font-mono text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -341,7 +405,6 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
                   </p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setBarcodeProduto(p)}
