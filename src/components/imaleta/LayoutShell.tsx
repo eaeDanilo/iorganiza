@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { IMaletaSidebar, IMaletaSidebarContent } from "./Sidebar";
+import { IMaletaSidebar, IMaletaSidebarContent, IMaletaBottomNav } from "./Sidebar";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 
 const BG = "#181818";
@@ -110,9 +110,10 @@ export function IMaletaLayoutShell({ children, userEmail, logoutButton }: Props)
               {logoutButton}
             </div>
           </header>
-          <main className="flex-1 p-4 sm:p-6 md:p-8">{children}</main>
+          <main className="flex-1 p-4 pb-24 sm:p-6 md:p-8 md:pb-8">{children}</main>
         </div>
       </div>
+      <IMaletaBottomNav />
     </>
   );
 }

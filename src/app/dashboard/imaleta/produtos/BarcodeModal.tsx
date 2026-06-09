@@ -17,8 +17,9 @@ export function BarcodeModal({ produto, onClose }: Props) {
     import("jsbarcode").then((mod) => {
       const JsBarcode = mod.default;
       if (svgRef.current && mounted) {
+        const isEan13 = /^\d{13}$/.test(produto.codigo_barras);
         JsBarcode(svgRef.current, produto.codigo_barras, {
-          format: "CODE128",
+          format: isEan13 ? "EAN13" : "CODE128",
           width: 2.5,
           height: 90,
           displayValue: true,

@@ -153,7 +153,8 @@ function ProductForm({
           <input
             placeholder="Código de barras (deixe vazio para gerar)"
             value={form.codigo_barras}
-            onChange={(e) => onChange({ ...form, codigo_barras: e.target.value })}
+            onChange={(e) => onChange({ ...form, codigo_barras: e.target.value.replace(/\D/g, "") })}
+            inputMode="numeric"
             style={inputStyle}
           />
         ) : (

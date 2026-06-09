@@ -12,12 +12,12 @@ async function getUserId() {
 }
 
 function gerarCodigoBarras(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "IML";
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
+  let digits = "";
+  for (let i = 0; i < 12; i++) digits += Math.floor(Math.random() * 10).toString();
+  let sum = 0;
+  for (let i = 0; i < 12; i++) sum += parseInt(digits[i]) * (i % 2 === 0 ? 1 : 3);
+  const check = (10 - (sum % 10)) % 10;
+  return digits + check.toString();
 }
 
 // ─── Vendedores ──────────────────────────────────────────────────────────────
