@@ -229,7 +229,6 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
             value={form.nome}
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
             style={inputStyle}
-            autoFocus
           />
           {showBarcode ? (
             <input
