@@ -210,7 +210,8 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
   const [form, setForm] = useState<FormState>(empty);
   const [imagemFile, setImagemFile] = useState<File | null>(null);
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
-  const [imagemUrlAtual, setImagemUrlAtual] = useState<string | null>(null);
+  const [imagemUrlAtual, setImagemUrlAtual] = useState<string | null>(null); // URL assinada (display)
+  const [imagemPathAtual, setImagemPathAtual] = useState<string | null>(null); // path (persistência)
   const [barcodeProduto, setBarcodeProduto] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -236,6 +237,7 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     setImagemFile(null);
     setImagemPreview(null);
     setImagemUrlAtual(null);
+    setImagemPathAtual(null);
   }
 
   function startEdit(p: Produto) {
@@ -248,7 +250,8 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     });
     setImagemFile(null);
     setImagemPreview(null);
-    setImagemUrlAtual(p.imagem_url ?? null);
+    setImagemUrlAtual(p.imagem_signed_url ?? null);
+    setImagemPathAtual(p.imagem_url ?? null);
     setShowForm(false);
   }
 
@@ -260,6 +263,7 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     setImagemFile(null);
     setImagemPreview(null);
     setImagemUrlAtual(null);
+    setImagemPathAtual(null);
   }
 
   function handleSave() {
@@ -268,11 +272,14 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
       try {
         const preco = form.preco ? parseFloat(form.preco) : undefined;
 
-        let imagemUrl: string | null = imagemUrlAtual;
+        let imagemPath: string | null = imagemPathAtual;
+        let imagemSigned: string | null = imagemUrlAtual;
         if (imagemFile) {
           const fd = new FormData();
           fd.append("file", imagemFile);
-          imagemUrl = await uploadProdutoImagem(fd);
+          const up = await uploadProdutoImagem(fd);
+          imagemPath = up.path;
+          imagemSigned = up.signedUrl;
         }
 
         if (editingId) {
@@ -280,12 +287,12 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
             nome: form.nome,
             descricao: form.descricao,
             preco,
-            imagem_url: imagemUrl,
+            imagem_url: imagemPath,
           });
           setProdutos((prev) =>
             prev.map((p) =>
               p.id === editingId
-                ? { ...p, nome: form.nome, descricao: form.descricao || null, preco: preco ?? null, imagem_url: imagemUrl }
+                ? { ...p, nome: form.nome, descricao: form.descricao || null, preco: preco ?? null, imagem_url: imagemPath, imagem_signed_url: imagemSigned }
                 : p
             )
           );
@@ -297,9 +304,9 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
             descricao: form.descricao,
             preco,
             codigo_barras: form.codigo_barras || undefined,
-            imagem_url: imagemUrl,
+            imagem_url: imagemPath,
           });
-          setProdutos((prev) => [...prev, novo]);
+          setProdutos((prev) => [...prev, { ...novo, imagem_signed_url: imagemSigned }]);
           setShowForm(false);
           toast.success("Produto criado");
         }
@@ -309,6 +316,7 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
         setImagemFile(null);
         setImagemPreview(null);
         setImagemUrlAtual(null);
+        setImagemPathAtual(null);
       } catch (e: any) {
         toast.error(e.message);
       }
@@ -352,6 +360,7 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
             setImagemFile(null);
             setImagemPreview(null);
             setImagemUrlAtual(null);
+            setImagemPathAtual(null);
           }}
           className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95"
           style={{ background: ACCENT, color: "#1C1C1C" }}
@@ -380,9 +389,9 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
                 className="flex items-center gap-3 rounded-xl px-4 py-3"
                 style={{ background: CARD, outline: `1px solid ${BORDER}` }}
               >
-                {p.imagem_url ? (
+                {p.imagem_signed_url ? (
                   <img
-                    src={p.imagem_url}
+                    src={p.imagem_signed_url}
                     alt={p.nome}
                     className="flex-shrink-0 rounded-lg object-cover"
                     style={{ width: 40, height: 40 }}

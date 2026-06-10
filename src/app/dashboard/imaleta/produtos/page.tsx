@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createIMaletaServiceClient } from "@/lib/imaleta/supabase";
+import { signProdutos } from "@/lib/imaleta/images";
 import { PageHeader } from "@/components/imaleta/PageHeader";
 import type { Produto } from "@/lib/imaleta/types";
 import { ProdutosUI } from "./ProdutosUI";
@@ -16,13 +17,15 @@ export default async function ProdutosPage() {
     .is("deleted_at", null)
     .order("nome");
 
+  const produtos = await signProdutos((data as Produto[]) ?? []);
+
   return (
     <div>
       <PageHeader
         title="Produtos"
         description="Cadastre produtos e gere códigos de barras para imprimir."
       />
-      <ProdutosUI initial={(data as Produto[]) ?? []} />
+      <ProdutosUI initial={produtos} />
     </div>
   );
 }

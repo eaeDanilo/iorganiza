@@ -5,32 +5,10 @@ import { createICobraServiceClient } from "@/lib/icobra/supabase";
 import { calcularEmprestimo, calcularStatusParcela, diasEntreDatas, hoje } from "@/lib/icobra/calculos";
 import { revalidatePath } from "next/cache";
 import type { EmprestimoFormData } from "@/lib/icobra/types";
-import { assertEmprestimoLimit } from "@/lib/limits";
+import { assertEmprestimoLimit, assertApiRateLimit } from "@/lib/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// Simple in-memory rate limiter: 20 req/min per user
-const rateLimitMap = new Map<string, { count: number; reset: number }>();
-let lastCleanup = Date.now();
-function checkRateLimit(key: string): boolean {
-  const now = Date.now();
-  // Limpa entradas expiradas a cada 5 min para evitar leak
-  if (now - lastCleanup > 300_000) {
-    for (const [k, v] of rateLimitMap) {
-      if (now > v.reset) rateLimitMap.delete(k);
-    }
-    lastCleanup = now;
-  }
-  const entry = rateLimitMap.get(key);
-  if (!entry || now > entry.reset) {
-    rateLimitMap.set(key, { count: 1, reset: now + 60_000 });
-    return true;
-  }
-  if (entry.count >= 20) return false;
-  entry.count++;
-  return true;
-}
 
 function buildSystemPrompt(): string {
   const hoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -469,7 +447,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`assistente:${authUser.id}`)) {
+  // Rate limit persistente (RPC check_rate_limit), resiste a cold starts serverless
+  try {
+    await assertApiRateLimit(authUser.id, "icobra-assistente");
+  } catch {
     return NextResponse.json(
       { error: "Muitas requisições. Aguarde um momento." },
       { status: 429 }

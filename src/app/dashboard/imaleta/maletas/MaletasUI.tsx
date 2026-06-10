@@ -48,7 +48,7 @@ function ItemsEditor({
   onChangeQty,
 }: {
   currentItems: ItemEntry[];
-  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url">[];
+  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url">[];
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
   onChangeQty: (id: string, delta: number) => void;
@@ -121,9 +121,9 @@ function ItemsEditor({
             return (
               <div key={item.produto_id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: "rgba(255,255,255,0.04)" }}>
                 <div className="flex items-center gap-2.5">
-                  {prod?.imagem_url ? (
+                  {prod?.imagem_signed_url ? (
                     <img
-                      src={prod.imagem_url}
+                      src={prod.imagem_signed_url}
                       alt={prod.nome}
                       className="h-8 w-8 rounded-md object-cover flex-shrink-0"
                       style={{ outline: "1px solid rgba(222,218,211,0.1)" }}
@@ -163,7 +163,7 @@ export function MaletasUI({
 }: {
   initial: Maleta[];
   vendedores: Pick<Vendedor, "id" | "nome">[];
-  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url">[];
+  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url">[];
 }) {
   const [maletas, setMaletas] = useState(initial);
   const [tab, setTab] = useState<"abertas" | "fechadas">("abertas");

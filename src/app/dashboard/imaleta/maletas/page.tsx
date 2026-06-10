@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createIMaletaServiceClient } from "@/lib/imaleta/supabase";
+import { signProdutos } from "@/lib/imaleta/images";
 import { PageHeader } from "@/components/imaleta/PageHeader";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
 import { MaletasUI } from "./MaletasUI";
@@ -33,6 +34,10 @@ export default async function MaletasPage() {
       .order("nome"),
   ]);
 
+  const produtosSigned = await signProdutos(
+    (produtos as Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url">[]) ?? []
+  );
+
   return (
     <div>
       <PageHeader
@@ -42,7 +47,7 @@ export default async function MaletasPage() {
       <MaletasUI
         initial={(maletas as Maleta[]) ?? []}
         vendedores={(vendedores as Pick<Vendedor, "id" | "nome">[]) ?? []}
-        produtos={(produtos as Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url">[]) ?? []}
+        produtos={produtosSigned}
       />
     </div>
   );

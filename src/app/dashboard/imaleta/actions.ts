@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createIMaletaServiceClient, createIMaletaStorageClient } from "@/lib/imaleta/supabase";
+import { signImagem } from "@/lib/imaleta/images";
 import type { Produto } from "@/lib/imaleta/types";
 
 async function getUserId() {
@@ -73,7 +74,9 @@ export async function excluirVendedor(id: string) {
 
 // ─── Produtos ────────────────────────────────────────────────────────────────
 
-export async function uploadProdutoImagem(formData: FormData): Promise<string> {
+export async function uploadProdutoImagem(
+  formData: FormData
+): Promise<{ path: string; signedUrl: string | null }> {
   const userId = await getUserId();
   const file = formData.get("file") as File | null;
   if (!file || file.size === 0) throw new Error("Arquivo inválido");
@@ -89,8 +92,8 @@ export async function uploadProdutoImagem(formData: FormData): Promise<string> {
     .upload(path, buffer, { contentType: file.type, upsert: true });
   if (error) throw new Error("Erro ao fazer upload: " + error.message);
 
-  const { data } = storage.storage.from("imaleta-imagens").getPublicUrl(path);
-  return data.publicUrl;
+  // Persiste o path; bucket é privado, display usa URL assinada.
+  return { path, signedUrl: await signImagem(path) };
 }
 
 export async function criarProduto(data: {

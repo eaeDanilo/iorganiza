@@ -5,7 +5,8 @@ export interface Produto {
   descricao: string | null;
   codigo_barras: string;
   preco: number | null;
-  imagem_url: string | null;
+  imagem_url: string | null; // path do objeto no bucket (não é URL pública)
+  imagem_signed_url?: string | null; // transiente: URL assinada para display, setada no servidor
   status: "active" | "inactive";
   created_at: string;
   updated_at: string;

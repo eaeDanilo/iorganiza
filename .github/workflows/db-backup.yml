@@ -1,0 +1,64 @@
+name: DB Backup (pg_dump)
+
+# Backup lógico diário do Postgres do Supabase.
+# Interim enquanto o projeto está no plano free (sem PITR).
+# Segredos necessários no repositório (Settings > Secrets and variables > Actions):
+#   SUPABASE_DB_URL   -> connection string da "Direct connection" (postgresql://...:5432/postgres?sslmode=require)
+#   BACKUP_PASSPHRASE -> passphrase forte para cifrar o dump (GPG simétrico, AES-256)
+#
+# O dump é cifrado ANTES de virar artefato — artefatos do GitHub contêm PII e não
+# devem ficar em claro. Restaure com:
+#   gpg --batch --yes --passphrase "$BACKUP_PASSPHRASE" -d backup.dump.gpg > backup.dump
+#   pg_restore --no-owner --no-privileges -d "<URL_DB_DESCARTAVEL>" backup.dump
+
+on:
+  schedule:
+    - cron: '30 3 * * *' # 03:30 UTC diariamente
+  workflow_dispatch: {} # permite rodar manualmente / testar restore
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install PostgreSQL 16 client
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Dump and encrypt
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_DB_URL:-}" ] || [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+            echo "::error::SUPABASE_DB_URL e BACKUP_PASSPHRASE são obrigatórios."
+            exit 1
+          fi
+          STAMP="$(date -u +%Y%m%d-%H%M%S)"
+          echo "BACKUP_NAME=backup-$STAMP" >> "$GITHUB_ENV"
+          # -Fc = formato custom (comprimido), portável para pg_restore seletivo
+          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges -Fc -f "backup-$STAMP.dump"
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            -o "backup-$STAMP.dump.gpg" "backup-$STAMP.dump"
+          rm -f "backup-$STAMP.dump"
+          ls -lh "backup-$STAMP.dump.gpg"
+
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: '*.dump.gpg'
+          retention-days: 30
+          if-no-files-found: error
