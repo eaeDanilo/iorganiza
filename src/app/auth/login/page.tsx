@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
+import { Turnstile, turnstileEnabled, type TurnstileHandle } from '@/components/auth/Turnstile';
 
 const URL_ERROR_MAP: Record<string, string> = {
   invalid_code: 'Falha ao autenticar com Google. Tente novamente.',
@@ -21,21 +22,34 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const urlError = search.get('error') ? (URL_ERROR_MAP[search.get('error')!] ?? search.get('error')) : null;
   const [error, setError] = useState<string | null>(urlError);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileHandle>(null);
   const raw = search.get('redirect') || '/dashboard';
   const safeRedirect = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    if (turnstileEnabled && !captchaToken) {
+      setError('Confirme que você não é um robô.');
+      return;
+    }
     setLoading(true);
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get('email'));
     const password = String(fd.get('password'));
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken: captchaToken ?? undefined },
+    });
     if (error) {
       setLoading(false);
       setError(translateAuthError(error.message));
+      // token é de uso único — gera um novo para a próxima tentativa
+      setCaptchaToken(null);
+      captchaRef.current?.reset();
       return;
     }
     window.location.href = safeRedirect;
@@ -74,8 +88,14 @@ function LoginForm() {
           </div>
           <Input id="password" name="password" type="password" required />
         </div>
+        <Turnstile
+          ref={captchaRef}
+          onVerify={setCaptchaToken}
+          onExpire={() => setCaptchaToken(null)}
+          className="flex justify-center"
+        />
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" disabled={loading || (turnstileEnabled && !captchaToken)}>
           {loading ? 'Entrando...' : 'Entrar'}
         </Button>
       </form>

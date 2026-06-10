@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
+import { Turnstile, turnstileEnabled, type TurnstileHandle } from '@/components/auth/Turnstile';
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
@@ -16,11 +17,12 @@ export default function SignupPage() {
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get('email'));
     const password = String(fd.get('password'));
@@ -29,10 +31,14 @@ export default function SignupPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Informe um e-mail válido (ex: nome@dominio.com).');
-      setLoading(false);
+      return;
+    }
+    if (turnstileEnabled && !captchaToken) {
+      setError('Confirme que você não é um robô.');
       return;
     }
 
+    setLoading(true);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signUp({
       email,
@@ -40,11 +46,14 @@ export default function SignupPage() {
       options: {
         data: { full_name: fullName, consented_at: new Date().toISOString() },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        captchaToken: captchaToken ?? undefined,
       },
     });
     setLoading(false);
     if (error) {
       setError(translateAuthError(error.message));
+      setCaptchaToken(null);
+      captchaRef.current?.reset();
       return;
     }
     setRegisteredEmail(email);
@@ -144,8 +153,14 @@ export default function SignupPage() {
               <Link href="/termos" target="_blank" className="text-primary underline">Termos de Uso</Link>
             </label>
           </div>
+          <Turnstile
+            ref={captchaRef}
+            onVerify={setCaptchaToken}
+            onExpire={() => setCaptchaToken(null)}
+            className="flex justify-center"
+          />
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || (turnstileEnabled && !captchaToken)}>
             {loading ? 'Criando...' : 'Criar conta'}
           </Button>
         </form>
