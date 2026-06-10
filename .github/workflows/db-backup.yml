@@ -48,7 +48,7 @@ jobs:
           STAMP="$(date -u +%Y%m%d-%H%M%S)"
           echo "BACKUP_NAME=backup-$STAMP" >> "$GITHUB_ENV"
           # -Fc = formato custom (comprimido), portável para pg_restore seletivo
-          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges -Fc -f "backup-$STAMP.dump"
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges -Fc -f "backup-$STAMP.dump"
           gpg --batch --yes --symmetric --cipher-algo AES256 \
             --passphrase "$BACKUP_PASSPHRASE" \
             -o "backup-$STAMP.dump.gpg" "backup-$STAMP.dump"
