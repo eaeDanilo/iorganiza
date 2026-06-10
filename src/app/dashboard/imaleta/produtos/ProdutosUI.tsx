@@ -2,10 +2,11 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon } from "lucide-react";
+import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
 import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem } from "../actions";
 import { BarcodeModal } from "./BarcodeModal";
+import { BarcodeScanner } from "./BarcodeScanner";
 
 const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";
@@ -127,6 +128,7 @@ function ProductForm({
   onCancel,
   isPending,
 }: ProductFormProps) {
+  const [scanning, setScanning] = useState(false);
   return (
     <div
       className="mb-4 rounded-xl p-5"
@@ -150,13 +152,24 @@ function ProductForm({
           style={inputStyle}
         />
         {showBarcode ? (
-          <input
-            placeholder="Código de barras (deixe vazio para gerar)"
-            value={form.codigo_barras}
-            onChange={(e) => onChange({ ...form, codigo_barras: e.target.value.replace(/\D/g, "") })}
-            inputMode="numeric"
-            style={inputStyle}
-          />
+          <div className="flex gap-2">
+            <input
+              placeholder="Código de barras (deixe vazio para gerar)"
+              value={form.codigo_barras}
+              onChange={(e) => onChange({ ...form, codigo_barras: e.target.value.replace(/\D/g, "") })}
+              inputMode="numeric"
+              style={inputStyle}
+            />
+            <button
+              type="button"
+              onClick={() => setScanning(true)}
+              title="Bipar com a câmera"
+              className="flex flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-white/[0.06]"
+              style={{ width: 40, border: "1px solid rgba(222,218,211,0.1)", color: ACCENT }}
+            >
+              <ScanLine className="h-4 w-4" />
+            </button>
+          </div>
         ) : (
           <input
             value={form.codigo_barras}
@@ -199,6 +212,19 @@ function ProductForm({
           Cancelar
         </button>
       </div>
+
+      {scanning && (
+        <BarcodeScanner
+          onDetect={(code) => {
+            const digits = code.replace(/\D/g, "");
+            if (!digits) return;
+            onChange({ ...form, codigo_barras: digits });
+            setScanning(false);
+            toast.success(`Código lido: ${digits}`);
+          }}
+          onClose={() => setScanning(false)}
+        />
+      )}
     </div>
   );
 }
