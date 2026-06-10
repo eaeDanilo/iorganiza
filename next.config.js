@@ -4,12 +4,12 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const CSP_PROD = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://accounts.google.com",
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://accounts.google.com https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://hooks.stripe.com https://accounts.google.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://hooks.stripe.com https://accounts.google.com https://challenges.cloudflare.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com",
+  "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://challenges.cloudflare.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
