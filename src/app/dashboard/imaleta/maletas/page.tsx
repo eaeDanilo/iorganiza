@@ -16,7 +16,6 @@ export default async function MaletasPage() {
       .select("*, vendedores(nome)")
       .eq("user_id", user.id)
       .is("deleted_at", null)
-      .neq("status", "conferida")
       .order("created_at", { ascending: false }),
     supabase
       .from("vendedores")
@@ -27,7 +26,7 @@ export default async function MaletasPage() {
       .order("nome"),
     supabase
       .from("produtos")
-      .select("id, nome, codigo_barras, preco")
+      .select("id, nome, codigo_barras, preco, imagem_url")
       .eq("user_id", user.id)
       .eq("status", "active")
       .is("deleted_at", null)
@@ -43,7 +42,7 @@ export default async function MaletasPage() {
       <MaletasUI
         initial={(maletas as Maleta[]) ?? []}
         vendedores={(vendedores as Pick<Vendedor, "id" | "nome">[]) ?? []}
-        produtos={(produtos as Pick<Produto, "id" | "nome" | "codigo_barras" | "preco">[]) ?? []}
+        produtos={(produtos as Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url">[]) ?? []}
       />
     </div>
   );

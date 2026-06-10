@@ -191,6 +191,48 @@ export async function criarMaleta(data: {
   revalidatePath("/dashboard/imaleta/maletas");
 }
 
+export async function atualizarMaleta(
+  id: string,
+  data: {
+    nome: string;
+    vendedor_id: string;
+    periodo_inicio: string;
+    items: { produto_id: string; quantidade: number }[];
+  }
+) {
+  const userId = await getUserId();
+  const supabase = createIMaletaServiceClient();
+
+  const { error } = await supabase
+    .from("maletas")
+    .update({
+      nome: data.nome.trim(),
+      vendedor_id: data.vendedor_id,
+      periodo_inicio: data.periodo_inicio,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .eq("status", "aberta");
+
+  if (error) throw new Error("Erro ao atualizar maleta: " + error.message);
+
+  await supabase.from("maleta_items").delete().eq("maleta_id", id);
+
+  if (data.items.length > 0) {
+    const { error: itemError } = await supabase.from("maleta_items").insert(
+      data.items.map((i) => ({
+        maleta_id: id,
+        produto_id: i.produto_id,
+        quantidade: i.quantidade,
+      }))
+    );
+    if (itemError) throw new Error("Erro ao atualizar itens: " + itemError.message);
+  }
+
+  revalidatePath("/dashboard/imaleta/maletas");
+}
+
 export async function fecharMaleta(id: string) {
   const userId = await getUserId();
   const supabase = createIMaletaServiceClient();

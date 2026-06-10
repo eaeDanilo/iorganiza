@@ -437,9 +437,9 @@ export function ConferenciaUI({
                 marginBottom: "12px",
               }}
             >
-              <option value="">Selecionar maleta...</option>
+              <option value="" style={{ background: "#181818", color: "#DEDAD3" }}>Selecionar maleta...</option>
               {maletas.map((m) => (
-                <option key={m.id} value={m.id}>
+                <option key={m.id} value={m.id} style={{ background: "#181818", color: "#DEDAD3" }}>
                   {m.nome} — {(m as any).vendedores?.nome}
                 </option>
               ))}
