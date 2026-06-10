@@ -6,7 +6,7 @@ import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine } from "lu
 import type { Produto } from "@/lib/imaleta/types";
 import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem } from "../actions";
 import { BarcodeModal } from "./BarcodeModal";
-import { BarcodeScanner } from "./BarcodeScanner";
+import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
 
 const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";

@@ -2,9 +2,10 @@
 
 import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
-import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode } from "lucide-react";
+import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine } from "lucide-react";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
 import { criarMaleta, excluirMaleta, atualizarMaleta, buscarItensMaleta } from "../actions";
+import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
 
 const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";
@@ -54,18 +55,24 @@ function ItemsEditor({
   onChangeQty: (id: string, delta: number) => void;
 }) {
   const [barcode, setBarcode] = useState("");
+  const [scanning, setScanning] = useState(false);
   const barcodeRef = useRef<HTMLInputElement>(null);
 
-  function handleBarcodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const code = barcode.trim().toUpperCase();
-    setBarcode("");
-    barcodeRef.current?.focus();
+  function processCode(raw: string) {
+    const code = raw.trim().toUpperCase();
     if (!code) return;
     const prod = produtos.find((p) => p.codigo_barras?.toUpperCase() === code);
     if (!prod) return void toast.error(`Código não encontrado: ${code}`);
     onAdd(prod.id);
     toast.success(`Adicionado: ${prod.nome}`);
+  }
+
+  function handleBarcodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const code = barcode;
+    setBarcode("");
+    barcodeRef.current?.focus();
+    processCode(code);
   }
 
   return (
@@ -94,6 +101,15 @@ function ItemsEditor({
           }}
         />
         <button
+          type="button"
+          onClick={() => setScanning(true)}
+          className="flex flex-shrink-0 items-center justify-center rounded-lg px-3 transition-colors hover:bg-white/[0.06]"
+          style={{ border: "1px solid rgba(222,218,211,0.1)", color: ACCENT }}
+          title="Bipar com a câmera"
+        >
+          <ScanLine className="h-4 w-4" />
+        </button>
+        <button
           type="submit"
           className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-all hover:brightness-95"
           style={{ background: ACCENT, color: "#1C1C1C" }}
@@ -102,6 +118,16 @@ function ItemsEditor({
           <ScanBarcode className="h-4 w-4" />
         </button>
       </form>
+
+      {scanning && (
+        <BarcodeScanner
+          onDetect={(code) => {
+            processCode(code);
+            setScanning(false);
+          }}
+          onClose={() => setScanning(false)}
+        />
+      )}
       <select
         onChange={(e) => { onAdd(e.target.value); e.target.value = ""; }}
         style={{ ...SELECT_STYLE, width: "auto", minWidth: "200px" }}
