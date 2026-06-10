@@ -6,6 +6,23 @@ const BUCKET = "imaleta-imagens";
 const SIGN_TTL = 3600; // 1h
 
 /**
+ * Detecta o tipo real da imagem pelos magic bytes (não confia no nome/MIME do
+ * cliente). Bloqueia SVG e qualquer não-imagem. Retorna null se não reconhecido.
+ */
+export function detectImageType(buffer: Buffer): { ext: string; mime: string } | null {
+  const b = buffer;
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff)
+    return { ext: "jpg", mime: "image/jpeg" };
+  if (b.length >= 4 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47)
+    return { ext: "png", mime: "image/png" };
+  if (b.length >= 4 && b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38)
+    return { ext: "gif", mime: "image/gif" };
+  if (b.length >= 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP")
+    return { ext: "webp", mime: "image/webp" };
+  return null;
+}
+
+/**
  * Extrai o path do objeto a partir de um path puro OU de uma URL pública legada
  * (ex.: ".../storage/v1/object/public/imaleta-imagens/uid/produtos/x.jpg").
  */

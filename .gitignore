@@ -22,3 +22,11 @@ coverage
 scripts/create-user-*.mjs
 scripts/create-icobra-*.mjs
 scripts/seed-*.mjs
+
+# secret temp (senha db) — nunca commitar
+temporario
+.dbpass.tmp
+
+temp1
+temp2
+dbpass.tmp

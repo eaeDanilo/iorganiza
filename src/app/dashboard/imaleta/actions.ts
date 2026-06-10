@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createIMaletaServiceClient, createIMaletaStorageClient } from "@/lib/imaleta/supabase";
-import { signImagem } from "@/lib/imaleta/images";
+import { signImagem, detectImageType } from "@/lib/imaleta/images";
 import type { Produto } from "@/lib/imaleta/types";
 
 async function getUserId() {
@@ -82,14 +82,18 @@ export async function uploadProdutoImagem(
   if (!file || file.size === 0) throw new Error("Arquivo inválido");
   if (file.size > 5 * 1024 * 1024) throw new Error("Imagem deve ter no máximo 5MB");
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const path = `${userId}/produtos/${Date.now()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Valida pelo conteúdo real, não pelo nome/MIME do cliente (que podem mentir).
+  const detected = detectImageType(buffer);
+  if (!detected) throw new Error("Formato inválido. Envie JPG, PNG, WEBP ou GIF.");
+
+  const path = `${userId}/produtos/${Date.now()}.${detected.ext}`;
 
   const storage = createIMaletaStorageClient();
   const { error } = await storage.storage
     .from("imaleta-imagens")
-    .upload(path, buffer, { contentType: file.type, upsert: true });
+    .upload(path, buffer, { contentType: detected.mime, upsert: true });
   if (error) throw new Error("Erro ao fazer upload: " + error.message);
 
   // Persiste o path; bucket é privado, display usa URL assinada.
