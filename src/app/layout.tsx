@@ -40,14 +40,12 @@ export const metadata: Metadata = {
     title: 'iOrganiza — Sistemas de gestão para o seu negócio',
     description:
       'Controle empréstimos e cobranças com o iCobra, gerencie maletas de consignação com o iMaleta. Simples, em português, direto no celular.',
-    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'iOrganiza' }],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'iOrganiza — Sistemas de gestão para o seu negócio',
     description:
       'Controle empréstimos e cobranças com o iCobra, gerencie maletas de consignação com o iMaleta.',
-    images: ['/logo.png'],
   },
   icons: { icon: '/logo.svg', apple: '/logo.png' },
   robots: { index: true, follow: true },

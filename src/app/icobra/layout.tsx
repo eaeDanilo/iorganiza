@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'pt_BR',
   },
-  twitter: { card: 'summary', title, description },
+  twitter: { card: 'summary_large_image', title, description },
 };
 
 export default function ICobraLayout({ children }: { children: React.ReactNode }) {
