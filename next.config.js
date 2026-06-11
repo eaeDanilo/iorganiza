@@ -36,6 +36,13 @@ const prodOnlyHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: path.join(__dirname),
+  // Server Actions cortam o body em 1MB por padrão. Upload de imagem do iMaleta
+  // aceita até 5MB (ver uploadProdutoImagem) — sobe o limite com folga.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '6mb',
+    },
+  },
   async headers() {
     const headers = [...baseSecurityHeaders, ...(isProd ? prodOnlyHeaders : [])];
     return [{ source: '/(.*)', headers }];

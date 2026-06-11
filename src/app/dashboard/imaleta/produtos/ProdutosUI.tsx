@@ -32,6 +32,10 @@ interface FormState {
 
 const empty: FormState = { nome: "", descricao: "", preco: "", codigo_barras: "" };
 
+// Limite de upload de imagem. Deve ficar <= bodySizeLimit dos Server Actions
+// (next.config.js) e à checagem em uploadProdutoImagem.
+const MAX_IMAGE_MB = 5;
+
 interface ImagePickerProps {
   imagemPreview: string | null;
   imagemUrlAtual: string | null;
@@ -252,6 +256,12 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      toast.error(`Imagem de ${mb} MB excede o limite de ${MAX_IMAGE_MB} MB.`);
+      e.target.value = "";
+      return;
+    }
     if (imagemPreview) URL.revokeObjectURL(imagemPreview);
     setImagemFile(file);
     setImagemPreview(URL.createObjectURL(file));
@@ -344,7 +354,12 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
         setImagemUrlAtual(null);
         setImagemPathAtual(null);
       } catch (e: any) {
-        toast.error(e.message);
+        const raw = typeof e?.message === "string" ? e.message : "Erro ao salvar";
+        toast.error(
+          raw.includes("Body exceeded")
+            ? `Imagem excede o limite de ${MAX_IMAGE_MB} MB.`
+            : raw
+        );
       }
     });
   }
