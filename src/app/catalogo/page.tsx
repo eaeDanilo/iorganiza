@@ -5,6 +5,14 @@ import { ICobraBanner } from '@/components/catalog/ICobraBanner';
 import { IMaletaBanner } from '@/components/catalog/IMaletaBanner';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Saas } from '@/types/database';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Catálogo de sistemas',
+  description:
+    'Conheça os sistemas do iOrganiza: iCobra para controle de empréstimos e cobranças, iMaleta para gestão de maletas de consignação. Teste grátis.',
+  alternates: { canonical: '/catalogo' },
+};
 
 export const revalidate = 60;
 

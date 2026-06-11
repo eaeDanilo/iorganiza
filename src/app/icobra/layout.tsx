@@ -8,9 +8,29 @@ const figtree = Figtree({
   weight: ['300', '400', '500', '600', '700', '800'],
 });
 
+const title = 'iCobra — Controle de empréstimos e cobranças';
+const description =
+  'Saiba quem deve, quanto deve e quando paga. Controle empréstimos, parcelas e inadimplência sem planilha, direto no celular. Teste grátis.';
+
 export const metadata: Metadata = {
-  title: 'iCobra — Controle seus empréstimos',
-  description: 'Gerencie empréstimos e cobranças sem planilha.',
+  title,
+  description,
+  alternates: { canonical: '/icobra' },
+  keywords: [
+    'controle de empréstimos',
+    'sistema de cobrança',
+    'controle de inadimplência',
+    'app para emprestar dinheiro',
+    'controle de fiado',
+  ],
+  openGraph: {
+    title,
+    description,
+    url: '/icobra',
+    type: 'website',
+    locale: 'pt_BR',
+  },
+  twitter: { card: 'summary', title, description },
 };
 
 export default function ICobraLayout({ children }: { children: React.ReactNode }) {

@@ -19,8 +19,21 @@ export default async function IMaletaLandingPage() {
     hasAccess = !!sub;
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "iMaleta",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description:
+      "Gestão de maletas de consignação com leitura de código de barras pela câmera do celular.",
+    url: `${process.env.NEXT_PUBLIC_APP_URL || "https://iorganiza.com.br"}/imaleta`,
+    inLanguage: "pt-BR",
+  };
+
   return (
     <div className="min-h-screen text-white" style={{ background: BG }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* NAV */}
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2.5">
@@ -177,7 +190,7 @@ export default async function IMaletaLandingPage() {
         style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
       >
         <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-          © 2025 iMaleta · Parte do{" "}
+          © {new Date().getFullYear()} iMaleta · Parte do{" "}
           <Link
             href="/"
             className="underline underline-offset-2 transition-colors hover:text-white/60"

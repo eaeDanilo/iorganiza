@@ -1,6 +1,8 @@
 'use client';
-import { useRef, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { trackEvent } from '@/lib/analytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +12,10 @@ import { translateAuthError } from '@/lib/auth-errors';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 import { Turnstile, turnstileEnabled, type TurnstileHandle } from '@/components/auth/Turnstile';
 
-export default function SignupPage() {
+function SignupForm() {
+  const search = useSearchParams();
+  const raw = search.get('redirect') || '/dashboard';
+  const safeRedirect = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -45,7 +50,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName, consented_at: new Date().toISOString() },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeRedirect)}`,
         captchaToken: captchaToken ?? undefined,
       },
     });
@@ -56,6 +61,7 @@ export default function SignupPage() {
       captchaRef.current?.reset();
       return;
     }
+    trackEvent('sign_up', { method: 'email' });
     setRegisteredEmail(email);
     setDone(true);
   }
@@ -68,7 +74,7 @@ export default function SignupPage() {
     await supabase.auth.resend({
       type: 'signup',
       email: registeredEmail,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeRedirect)}` },
     });
     setResending(false);
     setResent(true);
@@ -110,7 +116,7 @@ export default function SignupPage() {
         <CardDescription>Comece a usar iOrganiza Hub em segundos.</CardDescription>
       </CardHeader>
       <CardContent>
-        <GoogleSignInButton />
+        <GoogleSignInButton redirectTo={safeRedirect} />
         <p className="mt-2 text-center text-xs text-muted-foreground">
           Ao continuar com Google, você concorda com nossa{' '}
           <Link href="/privacidade" target="_blank" className="text-primary underline">Política de Privacidade</Link>
@@ -166,9 +172,22 @@ export default function SignupPage() {
         </form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Já tem conta?{' '}
-          <Link href="/auth/login" className="text-primary hover:underline">Entrar</Link>
+          <Link
+            href={safeRedirect !== '/dashboard' ? `/auth/login?redirect=${encodeURIComponent(safeRedirect)}` : '/auth/login'}
+            className="text-primary hover:underline"
+          >
+            Entrar
+          </Link>
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }

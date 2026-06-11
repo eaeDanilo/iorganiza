@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import Script from 'next/script';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { CookieConsent } from '@/components/shared/CookieConsent';
+import { Analytics } from '@/components/shared/Analytics';
 import './globals.css';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -12,25 +12,59 @@ const jakarta = Plus_Jakarta_Sans({
   weight: ['200', '300', '400', '500', '600', '700', '800'],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://iorganiza.com.br';
+
 export const metadata: Metadata = {
-  title: 'iOrganiza — Centralize seus sistemas',
-  description: 'Plataforma unificada para todos os seus sistemas de produtividade.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'iOrganiza — Sistemas de gestão para o seu negócio',
+    template: '%s | iOrganiza',
+  },
+  description:
+    'Controle empréstimos e cobranças com o iCobra, gerencie maletas de consignação com o iMaleta. Sistemas simples, em português, direto no celular.',
+  keywords: [
+    'controle de empréstimos',
+    'gestão de cobranças',
+    'controle de inadimplência',
+    'maleta de consignação',
+    'gestão de maletas',
+    'venda consignada',
+    'sistema de gestão',
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: siteUrl,
+    siteName: 'iOrganiza',
+    title: 'iOrganiza — Sistemas de gestão para o seu negócio',
+    description:
+      'Controle empréstimos e cobranças com o iCobra, gerencie maletas de consignação com o iMaleta. Simples, em português, direto no celular.',
+    images: [{ url: '/logo.png', width: 512, height: 512, alt: 'iOrganiza' }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'iOrganiza — Sistemas de gestão para o seu negócio',
+    description:
+      'Controle empréstimos e cobranças com o iCobra, gerencie maletas de consignação com o iMaleta.',
+    images: ['/logo.png'],
+  },
+  icons: { icon: '/logo.svg', apple: '/logo.png' },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`dark ${jakarta.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <Script src="/prevent-zoom.js" strategy="afterInteractive" />
         {children}
         <CookieConsent />
+        <Analytics />
         <SpeedInsights />
       </body>
     </html>

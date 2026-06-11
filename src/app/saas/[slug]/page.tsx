@@ -7,6 +7,31 @@ import { Badge } from '@/components/ui/badge';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatCurrency } from '@/lib/utils';
 import type { Saas, SaasPlan } from '@/types/database';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from('saas')
+    .select('name, description')
+    .eq('slug', slug)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (!data) return { title: 'Sistema não encontrado' };
+  return {
+    title: data.name,
+    description: data.description ?? undefined,
+    alternates: { canonical: `/saas/${slug}` },
+    openGraph: {
+      title: data.name,
+      description: data.description ?? undefined,
+      url: `/saas/${slug}`,
+      type: 'website',
+      locale: 'pt_BR',
+    },
+  };
+}
 
 export default async function SaasDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -43,7 +68,8 @@ export default async function SaasDetailPage({ params }: { params: Promise<{ slu
   }
 
   const isActive = saas.status === 'active';
-  const trialLoginUrl = `/auth/login?redirect=/dashboard/${saas.slug}`;
+  const trialUrl = `/trial/${saas.slug}`;
+  const trialLoginUrl = `/auth/signup?redirect=/trial/${saas.slug}`;
   const dashboardUrl = `/dashboard/${saas.slug}`;
 
   return (
@@ -82,7 +108,7 @@ export default async function SaasDetailPage({ params }: { params: Promise<{ slu
                   <>
                     {saas.trial_enabled && isActive && (
                       <Button asChild size="lg" variant="outline">
-                        <Link href={user ? dashboardUrl : trialLoginUrl}>
+                        <Link href={user ? trialUrl : trialLoginUrl}>
                           Testar grátis
                         </Link>
                       </Button>
@@ -167,7 +193,7 @@ export default async function SaasDetailPage({ params }: { params: Promise<{ slu
               {saas.trial_enabled && isActive && !hasActiveSub && (
                 <p className="mt-8 text-center text-sm text-muted-foreground">
                   Prefere experimentar antes?{' '}
-                  <Link href={user ? dashboardUrl : trialLoginUrl} className="underline underline-offset-2">
+                  <Link href={user ? trialUrl : trialLoginUrl} className="underline underline-offset-2">
                     Teste grátis com até {saas.trial_max_uses} uso{saas.trial_max_uses !== 1 ? 's' : ''}
                   </Link>
                 </p>

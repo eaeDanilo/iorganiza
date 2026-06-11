@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Cookie } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-const CONSENT_KEY = 'iorganiza_cookie_consent';
+import { CONSENT_KEY, CONSENT_EVENT } from '@/lib/analytics';
 
 function setConsentCookie(value: string) {
   const expires = new Date();
@@ -25,6 +24,7 @@ export function CookieConsent() {
     localStorage.setItem(CONSENT_KEY, type);
     setConsentCookie(type);
     setVisible(false);
+    if (type === 'all') window.dispatchEvent(new Event(CONSENT_EVENT));
   }
 
   if (!visible) return null;

@@ -7,7 +7,7 @@ export default async function TrialPage({ params }: { params: Promise<{ slug: st
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/auth/login?redirect=/trial/${slug}`);
+    redirect(`/auth/signup?redirect=/trial/${slug}`);
   }
 
   const supabase = await createSupabaseServerClient();

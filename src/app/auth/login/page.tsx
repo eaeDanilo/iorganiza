@@ -10,6 +10,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { translateAuthError } from '@/lib/auth-errors';
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button';
 import { Turnstile, turnstileEnabled, type TurnstileHandle } from '@/components/auth/Turnstile';
+import { trackEvent } from '@/lib/analytics';
 
 const URL_ERROR_MAP: Record<string, string> = {
   invalid_code: 'Falha ao autenticar com Google. Tente novamente.',
@@ -52,6 +53,7 @@ function LoginForm() {
       captchaRef.current?.reset();
       return;
     }
+    trackEvent('login', { method: 'email' });
     window.location.href = safeRedirect;
   }
 
@@ -99,6 +101,15 @@ function LoginForm() {
           {loading ? 'Entrando...' : 'Entrar'}
         </Button>
       </form>
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        Não tem conta?{' '}
+        <Link
+          href={safeRedirect !== '/dashboard' ? `/auth/signup?redirect=${encodeURIComponent(safeRedirect)}` : '/auth/signup'}
+          className="text-primary hover:underline"
+        >
+          Cadastre-se
+        </Link>
+      </p>
     </>
   );
 }
@@ -114,10 +125,6 @@ export default function LoginPage() {
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Não tem conta?{' '}
-          <Link href="/auth/signup" className="text-primary hover:underline">Cadastre-se</Link>
-        </p>
       </CardContent>
     </Card>
   );

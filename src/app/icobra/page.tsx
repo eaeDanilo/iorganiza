@@ -16,8 +16,21 @@ export default async function ICobraLandingPage() {
     hasAccess = !!sub;
   }
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'iCobra',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    description:
+      'Controle de empréstimos, parcelas e inadimplência para quem empresta dinheiro ou vende fiado.',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://iorganiza.com.br'}/icobra`,
+    inLanguage: 'pt-BR',
+  };
+
   return (
     <div className="min-h-screen bg-[#0C1A10] text-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* NAV */}
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
@@ -27,7 +40,7 @@ export default async function ICobraLandingPage() {
               <path d="M3 7L6 10L11 4" stroke="#0C1A10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="text-[17px] font-700 tracking-tight text-white">iCobra</span>
+          <span className="text-[17px] font-bold tracking-tight text-white">iCobra</span>
         </div>
         <div className="flex items-center gap-5">
           <Link href="/" className="text-sm text-white/40 hover:text-white/70 transition-colors">
@@ -40,7 +53,7 @@ export default async function ICobraLandingPage() {
               </Link>
               <Link
                 href="/auth/signup"
-                className="rounded-lg bg-[#00C853] px-4 py-2 text-sm font-600 text-[#0C1A10] hover:bg-[#22D96A] transition-colors"
+                className="rounded-lg bg-[#00C853] px-4 py-2 text-sm font-semibold text-[#0C1A10] hover:bg-[#22D96A] transition-colors"
               >
                 Começar grátis
               </Link>
@@ -48,7 +61,7 @@ export default async function ICobraLandingPage() {
           ) : (
             <Link
               href="/dashboard/icobra"
-              className="rounded-lg bg-[#00C853] px-4 py-2 text-sm font-600 text-[#0C1A10] hover:bg-[#22D96A] transition-colors"
+              className="rounded-lg bg-[#00C853] px-4 py-2 text-sm font-semibold text-[#0C1A10] hover:bg-[#22D96A] transition-colors"
             >
               Acessar painel
             </Link>
@@ -62,11 +75,11 @@ export default async function ICobraLandingPage() {
         {/* Badge */}
         <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-[#00C853]/10 px-3 py-1.5 ring-1 ring-[#00C853]/20">
           <span className="h-1.5 w-1.5 rounded-full bg-[#00C853]" />
-          <span className="text-xs font-500 text-[#00C853]">Gestão de empréstimos</span>
+          <span className="text-xs font-medium text-[#00C853]">Gestão de empréstimos</span>
         </div>
 
         {/* Headline */}
-        <h1 className="max-w-2xl text-5xl font-800 leading-[1.08] tracking-[-0.02em] text-white md:text-6xl">
+        <h1 className="max-w-2xl text-5xl font-extrabold leading-[1.08] tracking-[-0.02em] text-white md:text-6xl">
           Controle seus<br />
           empréstimos.<br />
           <span className="text-[#00C853]">Sem planilha.</span>
@@ -80,7 +93,7 @@ export default async function ICobraLandingPage() {
         <div className="mt-10 flex items-center gap-4">
           <Link
             href={ctaHref}
-            className="rounded-lg bg-[#00C853] px-6 py-3 text-[15px] font-600 text-[#0C1A10] hover:bg-[#22D96A] transition-colors"
+            className="rounded-lg bg-[#00C853] px-6 py-3 text-[15px] font-semibold text-[#0C1A10] hover:bg-[#22D96A] transition-colors"
           >
             {user ? 'Acessar painel' : 'Começar grátis'}
           </Link>
@@ -120,7 +133,7 @@ export default async function ICobraLandingPage() {
               className="rounded-xl bg-white/[0.04] p-6 ring-1 ring-white/[0.07]"
             >
               <div className="mb-3 h-1 w-8 rounded-full bg-[#00C853]" />
-              <p className="font-600 text-white">{f.title}</p>
+              <p className="font-semibold text-white">{f.title}</p>
               <p className="mt-1.5 text-sm leading-relaxed text-white/45">{f.desc}</p>
             </div>
           ))}
@@ -130,7 +143,7 @@ export default async function ICobraLandingPage() {
       {/* FOOTER */}
       <footer className="mx-auto max-w-5xl border-t border-white/[0.06] px-6 py-6">
         <p className="text-xs text-white/25">
-          © 2025 iCobra · Parte do{' '}
+          © {new Date().getFullYear()} iCobra · Parte do{' '}
           <Link href="/" className="text-white/40 hover:text-white/60 transition-colors underline underline-offset-2">
             ecossistema iOrganiza
           </Link>
