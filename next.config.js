@@ -4,9 +4,11 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const CSP_PROD = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://accounts.google.com https://challenges.cloudflare.com",
+  // *.googletagmanager.com: GA4 (consent-gated) carrega gtag.js desse domínio
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://accounts.google.com https://challenges.cloudflare.com https://*.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://hooks.stripe.com https://accounts.google.com https://challenges.cloudflare.com",
+  // google-analytics/analytics.google: beacons do GA4 (inclui endpoints regionais)
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://hooks.stripe.com https://accounts.google.com https://challenges.cloudflare.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "frame-src https://js.stripe.com https://hooks.stripe.com https://accounts.google.com https://challenges.cloudflare.com",
