@@ -33,24 +33,44 @@ export function BarcodeModal({ produto, onClose }: Props) {
     return () => { mounted = false; };
   }, [produto.codigo_barras]);
 
-  function handlePrint() {
+  async function handlePrint() {
+    const { default: JsBarcode } = await import("jsbarcode");
+    // Versão só-barras para impressão: sem nome, sem número, barras grossas.
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const isEan13 = /^\d{13}$/.test(produto.codigo_barras);
+    JsBarcode(svg, produto.codigo_barras, {
+      format: isEan13 ? "EAN13" : "CODE128",
+      width: 4,
+      height: 100,
+      displayValue: false,
+      margin: 8, // zona de silêncio mínima para o leitor reconhecer
+      background: "#FFFFFF",
+      lineColor: "#000000",
+    });
+    // viewBox + preserveAspectRatio="none" fazem o código esticar até
+    // preencher todo o papel/etiqueta, no maior tamanho que a impressora der.
+    const w = svg.getAttribute("width");
+    const h = svg.getAttribute("height");
+    if (w && h) svg.setAttribute("viewBox", `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+    svg.removeAttribute("width");
+    svg.removeAttribute("height");
+    svg.setAttribute("preserveAspectRatio", "none");
+
     const printWindow = window.open("", "_blank", "width=400,height=300");
     if (!printWindow) return;
-    const svgHtml = svgRef.current?.outerHTML ?? "";
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${produto.nome}</title>
+          <title>${produto.codigo_barras}</title>
           <style>
-            body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; }
-            p { margin: 4px 0 0; font-size: 13px; color: #333; }
-            @media print { body { padding: 8mm; } }
+            @page { margin: 0; }
+            html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+            svg { display: block; width: 100%; height: 100%; }
           </style>
         </head>
         <body>
-          ${svgHtml}
-          <p>${produto.nome}</p>
+          ${svg.outerHTML}
           <script>window.onload = () => { window.print(); window.close(); }</script>
         </body>
       </html>
