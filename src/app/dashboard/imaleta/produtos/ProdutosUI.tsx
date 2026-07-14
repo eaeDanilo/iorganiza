@@ -2,11 +2,12 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine } from "lucide-react";
+import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
 import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem } from "../actions";
 import { BarcodeModal } from "./BarcodeModal";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
+import { CameraCapture } from "@/components/imaleta/CameraCapture";
 
 const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";
@@ -41,10 +42,12 @@ interface ImagePickerProps {
   imagemUrlAtual: string | null;
   fileInputRef: React.RefObject<HTMLInputElement>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCapture: (file: File) => void;
   onRemove: () => void;
 }
 
-function ImagePicker({ imagemPreview, imagemUrlAtual, fileInputRef, onFileChange, onRemove }: ImagePickerProps) {
+function ImagePicker({ imagemPreview, imagemUrlAtual, fileInputRef, onFileChange, onCapture, onRemove }: ImagePickerProps) {
+  const [cameraOpen, setCameraOpen] = useState(false);
   const display = imagemPreview ?? imagemUrlAtual;
   return (
     <div className="flex items-start gap-3">
@@ -72,11 +75,21 @@ function ImagePicker({ imagemPreview, imagemUrlAtual, fileInputRef, onFileChange
       <div className="flex flex-col justify-center gap-1 pt-1">
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="text-left text-xs transition-colors hover:brightness-90"
+          onClick={() => setCameraOpen(true)}
+          className="flex items-center gap-1.5 text-left text-xs transition-colors hover:brightness-90"
           style={{ color: ACCENT }}
         >
-          {display ? "Trocar foto" : "Adicionar foto"}
+          <Camera className="h-3.5 w-3.5" />
+          Tirar foto
+        </button>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-1.5 text-left text-xs transition-colors hover:brightness-90"
+          style={{ color: ACCENT }}
+        >
+          <Upload className="h-3.5 w-3.5" />
+          {display ? "Trocar pelo aparelho" : "Carregar do aparelho"}
         </button>
         {display && (
           <button
@@ -99,6 +112,15 @@ function ImagePicker({ imagemPreview, imagemUrlAtual, fileInputRef, onFileChange
         onChange={onFileChange}
         style={{ display: "none" }}
       />
+      {cameraOpen && (
+        <CameraCapture
+          onCapture={(file) => {
+            onCapture(file);
+            setCameraOpen(false);
+          }}
+          onClose={() => setCameraOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -112,6 +134,7 @@ interface ProductFormProps {
   imagemUrlAtual: string | null;
   fileInputRef: React.RefObject<HTMLInputElement>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCaptureImagem: (file: File) => void;
   onRemoveImagem: () => void;
   onSave: () => void;
   onCancel: () => void;
@@ -127,6 +150,7 @@ function ProductForm({
   imagemUrlAtual,
   fileInputRef,
   onFileChange,
+  onCaptureImagem,
   onRemoveImagem,
   onSave,
   onCancel,
@@ -145,6 +169,7 @@ function ProductForm({
           imagemUrlAtual={imagemUrlAtual}
           fileInputRef={fileInputRef}
           onFileChange={onFileChange}
+          onCapture={onCaptureImagem}
           onRemove={onRemoveImagem}
         />
       </div>
@@ -253,18 +278,21 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     };
   }, [imagemPreview]);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function applyImagemFile(file: File): boolean {
     if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
       const mb = (file.size / (1024 * 1024)).toFixed(1);
       toast.error(`Imagem de ${mb} MB excede o limite de ${MAX_IMAGE_MB} MB.`);
-      e.target.value = "";
-      return;
+      return false;
     }
     if (imagemPreview) URL.revokeObjectURL(imagemPreview);
     setImagemFile(file);
     setImagemPreview(URL.createObjectURL(file));
+    return true;
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) applyImagemFile(file);
     e.target.value = "";
   }
 
@@ -384,6 +412,7 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
     imagemUrlAtual,
     fileInputRef,
     onFileChange: handleFileChange,
+    onCaptureImagem: applyImagemFile,
     onRemoveImagem: handleRemoveImagem,
     onSave: handleSave,
     onCancel: handleCancel,
