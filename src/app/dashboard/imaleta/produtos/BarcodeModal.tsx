@@ -72,7 +72,17 @@ export function BarcodeModal({ produto, onClose }: Props) {
     const precoEscapado = escapeHtml(preco);
 
     // Etiqueta térmica para joias: 95mm x 12mm, 1 coluna, sem margens.
-    // Layout lado a lado: código de barras à esquerda, nome + preço à direita.
+    // Layout da mídia: 0-30mm etiqueta, 30-60mm etiqueta duplicada, 60-95mm alça (em branco).
+    const bloco = `
+      <div class="bloco">
+        ${svg.outerHTML}
+        <div class="info">
+          <div class="nome">${nomeEscapado}</div>
+          <div class="preco">${precoEscapado}</div>
+        </div>
+      </div>
+    `;
+
     const printWindow = window.open("", "_blank", "width=500,height=200");
     if (!printWindow) return;
     printWindow.document.write(`
@@ -83,43 +93,52 @@ export function BarcodeModal({ produto, onClose }: Props) {
           <style>
             @page { size: 95mm 12mm; margin: 0; }
             html, body { margin: 0; padding: 0; width: 95mm; height: 12mm; }
-            .etiqueta {
+            .rolo {
               display: flex;
-              align-items: center;
               width: 95mm;
               height: 12mm;
               overflow: hidden;
               font-family: Arial, Helvetica, sans-serif;
             }
-            .etiqueta svg { flex: 0 0 42mm; height: 11mm; }
-            .info {
-              flex: 1;
-              min-width: 0;
-              padding-left: 1.5mm;
+            .bloco {
+              flex: 0 0 30mm;
+              width: 30mm;
+              height: 12mm;
+              display: flex;
+              flex-direction: column;
               overflow: hidden;
             }
+            .bloco svg { flex: 0 0 6.8mm; width: 100%; height: 6.8mm; }
+            .info {
+              flex: 0 0 5.2mm;
+              height: 5.2mm;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              overflow: hidden;
+              padding: 0 1mm;
+            }
             .nome {
-              font-size: 2.3mm;
-              line-height: 1.2;
+              font-size: 1.7mm;
+              line-height: 1.15;
               font-weight: 600;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
             }
             .preco {
-              font-size: 2.8mm;
-              line-height: 1.2;
+              font-size: 2.1mm;
+              line-height: 1.15;
               font-weight: 700;
             }
+            .alca { flex: 0 0 35mm; width: 35mm; height: 12mm; }
           </style>
         </head>
         <body>
-          <div class="etiqueta">
-            ${svg.outerHTML}
-            <div class="info">
-              <div class="nome">${nomeEscapado}</div>
-              <div class="preco">${precoEscapado}</div>
-            </div>
+          <div class="rolo">
+            ${bloco}
+            ${bloco}
+            <div class="alca"></div>
           </div>
           <script>window.onload = () => { window.print(); window.close(); }</script>
         </body>
