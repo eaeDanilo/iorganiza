@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine } from "lucide-react";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
@@ -148,9 +149,11 @@ function ItemsEditor({
               <div key={item.produto_id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: "rgba(255,255,255,0.04)" }}>
                 <div className="flex items-center gap-2.5">
                   {prod?.imagem_signed_url ? (
-                    <img
+                    <Image
                       src={prod.imagem_signed_url}
                       alt={prod.nome}
+                      width={32}
+                      height={32}
                       className="h-8 w-8 rounded-md object-cover flex-shrink-0"
                       style={{ outline: "1px solid rgba(222,218,211,0.1)" }}
                     />
