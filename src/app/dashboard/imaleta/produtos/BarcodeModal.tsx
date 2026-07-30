@@ -56,7 +56,8 @@ export function BarcodeModal({ produto, onClose }: Props) {
     svg.removeAttribute("height");
     svg.setAttribute("preserveAspectRatio", "none");
 
-    const printWindow = window.open("", "_blank", "width=400,height=300");
+    // Etiqueta térmica para joias: 95mm x 12mm, 1 coluna, sem margens.
+    const printWindow = window.open("", "_blank", "width=400,height=200");
     if (!printWindow) return;
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -64,9 +65,9 @@ export function BarcodeModal({ produto, onClose }: Props) {
         <head>
           <title>${produto.codigo_barras}</title>
           <style>
-            @page { margin: 0; }
-            html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
-            svg { display: block; width: 100%; height: 100%; }
+            @page { size: 95mm 12mm; margin: 0; }
+            html, body { margin: 0; padding: 0; width: 95mm; height: 12mm; }
+            svg { display: block; width: 95mm; height: 12mm; }
           </style>
         </head>
         <body>
