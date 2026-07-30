@@ -109,10 +109,10 @@ export function BarcodeModal({ produto, onClose }: Props) {
               justify-content: center;
               overflow: hidden;
             }
-            .bloco svg { flex: 0 0 7.4mm; width: 100%; height: 7.4mm; margin-bottom: 0.3mm; }
+            .bloco svg { flex: 0 0 5.3mm; width: 100%; height: 5.3mm; margin-bottom: 0.3mm; }
             .info {
-              flex: 0 0 3.3mm;
-              height: 3.3mm;
+              flex: 0 0 4.5mm;
+              height: 4.5mm;
               display: flex;
               flex-direction: column;
               justify-content: center;
@@ -120,7 +120,7 @@ export function BarcodeModal({ produto, onClose }: Props) {
               padding: 0 1.2mm;
             }
             .nome {
-              font-size: 1.5mm;
+              font-size: 1.9mm;
               line-height: 1.1;
               font-weight: 500;
               letter-spacing: 0.02mm;
@@ -130,7 +130,7 @@ export function BarcodeModal({ produto, onClose }: Props) {
               text-overflow: ellipsis;
             }
             .preco {
-              font-size: 2mm;
+              font-size: 2.1mm;
               line-height: 1.15;
               font-weight: 700;
               letter-spacing: 0.02mm;
