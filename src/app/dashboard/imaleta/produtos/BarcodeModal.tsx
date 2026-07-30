@@ -104,9 +104,11 @@ export function BarcodeModal({ produto, onClose }: Props) {
               flex: 0 0 30mm;
               width: 30mm;
               height: 12mm;
+              box-sizing: border-box;
               display: flex;
               flex-direction: column;
-              justify-content: center;
+              justify-content: flex-end;
+              padding-bottom: 0.5mm;
               overflow: hidden;
             }
             .bloco svg { flex: 0 0 5.3mm; width: 100%; height: 5.3mm; margin-bottom: 0.3mm; }
