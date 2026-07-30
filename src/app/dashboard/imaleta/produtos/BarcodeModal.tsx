@@ -9,6 +9,15 @@ interface Props {
   onClose: () => void;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function BarcodeModal({ produto, onClose }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -35,20 +44,20 @@ export function BarcodeModal({ produto, onClose }: Props) {
 
   async function handlePrint() {
     const { default: JsBarcode } = await import("jsbarcode");
-    // Versão só-barras para impressão: sem nome, sem número, barras grossas.
+    // Barras só, sem número embaixo (o número já aparece como texto ao lado).
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const isEan13 = /^\d{13}$/.test(produto.codigo_barras);
     JsBarcode(svg, produto.codigo_barras, {
       format: isEan13 ? "EAN13" : "CODE128",
-      width: 4,
+      width: 2,
       height: 100,
       displayValue: false,
-      margin: 8, // zona de silêncio mínima para o leitor reconhecer
+      margin: 4, // zona de silêncio mínima para o leitor reconhecer
       background: "#FFFFFF",
       lineColor: "#000000",
     });
     // viewBox + preserveAspectRatio="none" fazem o código esticar até
-    // preencher todo o papel/etiqueta, no maior tamanho que a impressora der.
+    // preencher a área reservada a ele dentro da etiqueta.
     const w = svg.getAttribute("width");
     const h = svg.getAttribute("height");
     if (w && h) svg.setAttribute("viewBox", `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
@@ -56,8 +65,15 @@ export function BarcodeModal({ produto, onClose }: Props) {
     svg.removeAttribute("height");
     svg.setAttribute("preserveAspectRatio", "none");
 
+    const preco = produto.preco != null
+      ? produto.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : "";
+    const nomeEscapado = escapeHtml(produto.nome);
+    const precoEscapado = escapeHtml(preco);
+
     // Etiqueta térmica para joias: 95mm x 12mm, 1 coluna, sem margens.
-    const printWindow = window.open("", "_blank", "width=400,height=200");
+    // Layout lado a lado: código de barras à esquerda, nome + preço à direita.
+    const printWindow = window.open("", "_blank", "width=500,height=200");
     if (!printWindow) return;
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -67,11 +83,44 @@ export function BarcodeModal({ produto, onClose }: Props) {
           <style>
             @page { size: 95mm 12mm; margin: 0; }
             html, body { margin: 0; padding: 0; width: 95mm; height: 12mm; }
-            svg { display: block; width: 95mm; height: 12mm; }
+            .etiqueta {
+              display: flex;
+              align-items: center;
+              width: 95mm;
+              height: 12mm;
+              overflow: hidden;
+              font-family: Arial, Helvetica, sans-serif;
+            }
+            .etiqueta svg { flex: 0 0 42mm; height: 11mm; }
+            .info {
+              flex: 1;
+              min-width: 0;
+              padding-left: 1.5mm;
+              overflow: hidden;
+            }
+            .nome {
+              font-size: 2.3mm;
+              line-height: 1.2;
+              font-weight: 600;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            .preco {
+              font-size: 2.8mm;
+              line-height: 1.2;
+              font-weight: 700;
+            }
           </style>
         </head>
         <body>
-          ${svg.outerHTML}
+          <div class="etiqueta">
+            ${svg.outerHTML}
+            <div class="info">
+              <div class="nome">${nomeEscapado}</div>
+              <div class="preco">${precoEscapado}</div>
+            </div>
+          </div>
           <script>window.onload = () => { window.print(); window.close(); }</script>
         </body>
       </html>
