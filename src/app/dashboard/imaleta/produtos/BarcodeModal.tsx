@@ -106,12 +106,13 @@ export function BarcodeModal({ produto, onClose }: Props) {
               height: 12mm;
               display: flex;
               flex-direction: column;
+              justify-content: center;
               overflow: hidden;
             }
-            .bloco svg { flex: 0 0 6.8mm; width: 100%; height: 6.8mm; }
+            .bloco svg { flex: 0 0 6mm; width: 100%; height: 6mm; }
             .info {
-              flex: 0 0 5.2mm;
-              height: 5.2mm;
+              flex: 0 0 4mm;
+              height: 4mm;
               display: flex;
               flex-direction: column;
               justify-content: center;
