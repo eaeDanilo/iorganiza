@@ -109,28 +109,31 @@ export function BarcodeModal({ produto, onClose }: Props) {
               justify-content: center;
               overflow: hidden;
             }
-            .bloco svg { flex: 0 0 6mm; width: 100%; height: 6mm; }
+            .bloco svg { flex: 0 0 7.4mm; width: 100%; height: 7.4mm; margin-bottom: 0.3mm; }
             .info {
-              flex: 0 0 4mm;
-              height: 4mm;
+              flex: 0 0 3.3mm;
+              height: 3.3mm;
               display: flex;
               flex-direction: column;
               justify-content: center;
               overflow: hidden;
-              padding: 0 1mm;
+              padding: 0 1.2mm;
             }
             .nome {
-              font-size: 1.7mm;
-              line-height: 1.15;
-              font-weight: 600;
+              font-size: 1.5mm;
+              line-height: 1.1;
+              font-weight: 500;
+              letter-spacing: 0.02mm;
+              color: #333;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
             }
             .preco {
-              font-size: 2.1mm;
+              font-size: 2mm;
               line-height: 1.15;
               font-weight: 700;
+              letter-spacing: 0.02mm;
             }
             .alca { flex: 0 0 35mm; width: 35mm; height: 12mm; }
           </style>
