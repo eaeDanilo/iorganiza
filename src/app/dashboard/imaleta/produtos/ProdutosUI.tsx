@@ -2,8 +2,9 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload } from "lucide-react";
+import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload, Briefcase } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
+import type { Alocacao } from "@/lib/imaleta/alocacoes";
 import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem } from "../actions";
 import { BarcodeModal } from "./BarcodeModal";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
@@ -258,7 +259,13 @@ function ProductForm({
   );
 }
 
-export function ProdutosUI({ initial }: { initial: Produto[] }) {
+export function ProdutosUI({
+  initial,
+  alocacoes,
+}: {
+  initial: Produto[];
+  alocacoes: Record<string, Alocacao>;
+}) {
   const [produtos, setProdutos] = useState(initial);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -484,6 +491,16 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
                       <span className="ml-3 font-sans">R$ {Number(p.preco).toFixed(2)}</span>
                     )}
                   </p>
+                  {alocacoes[p.id] && (
+                    <span
+                      className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      style={{ background: "rgba(245,158,11,0.12)", color: "#F59E0B" }}
+                      title={`Maleta: ${alocacoes[p.id].maletaNome}`}
+                    >
+                      <Briefcase className="h-2.5 w-2.5" />
+                      Na maleta de {alocacoes[p.id].vendedorNome}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1">

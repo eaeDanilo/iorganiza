@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
 import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine } from "lucide-react";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
+import type { Alocacao } from "@/lib/imaleta/alocacoes";
 import { criarMaleta, excluirMaleta, atualizarMaleta, buscarItensMaleta } from "../actions";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
 
@@ -44,12 +45,14 @@ interface ItemEntry {
 function ItemsEditor({
   currentItems,
   produtos,
+  alocacoes,
   onAdd,
   onRemove,
   onChangeQty,
 }: {
   currentItems: ItemEntry[];
   produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url">[];
+  alocacoes: Record<string, Alocacao>;
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
   onChangeQty: (id: string, delta: number) => void;
@@ -137,7 +140,9 @@ function ItemsEditor({
         {produtos
           .filter((p) => !currentItems.some((i) => i.produto_id === p.id))
           .map((p) => (
-            <option key={p.id} value={p.id} style={OPTION_STYLE}>{p.nome}</option>
+            <option key={p.id} value={p.id} style={OPTION_STYLE}>
+              {p.nome}{alocacoes[p.id] ? ` — em uso (${alocacoes[p.id].vendedorNome})` : ""}
+            </option>
           ))}
       </select>
       {currentItems.length > 0 && (
@@ -187,10 +192,12 @@ export function MaletasUI({
   initial,
   vendedores,
   produtos,
+  alocacoes,
 }: {
   initial: Maleta[];
   vendedores: Pick<Vendedor, "id" | "nome">[];
   produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url">[];
+  alocacoes: Record<string, Alocacao>;
 }) {
   const [maletas, setMaletas] = useState(initial);
   const [tab, setTab] = useState<"abertas" | "fechadas">("abertas");
@@ -216,6 +223,10 @@ export function MaletasUI({
   // Create item helpers
   function addItem(produtoId: string) {
     if (!produtoId) return;
+    const aloc = alocacoes[produtoId];
+    if (aloc) {
+      return void toast.error(`Produto já está na maleta "${aloc.maletaNome}" (${aloc.vendedorNome})`);
+    }
     setItems((prev) => {
       const ex = prev.find((i) => i.produto_id === produtoId);
       if (ex) return prev.map((i) => i.produto_id === produtoId ? { ...i, quantidade: i.quantidade + 1 } : i);
@@ -234,6 +245,10 @@ export function MaletasUI({
   // Edit item helpers
   function addEditItem(produtoId: string) {
     if (!produtoId) return;
+    const aloc = alocacoes[produtoId];
+    if (aloc && aloc.maletaId !== editId) {
+      return void toast.error(`Produto já está na maleta "${aloc.maletaNome}" (${aloc.vendedorNome})`);
+    }
     setEditItems((prev) => {
       const ex = prev.find((i) => i.produto_id === produtoId);
       if (ex) return prev.map((i) => i.produto_id === produtoId ? { ...i, quantidade: i.quantidade + 1 } : i);
@@ -392,7 +407,7 @@ export function MaletasUI({
             <input type="date" value={periodoInicio} onChange={(e) => setPeriodoInicio(e.target.value)} min="2000-01-01" max="2200-12-31" style={SELECT_STYLE} />
           </div>
           <div className="mt-4">
-            <ItemsEditor currentItems={items} produtos={produtos} onAdd={addItem} onRemove={removeItem} onChangeQty={changeQty} />
+            <ItemsEditor currentItems={items} produtos={produtos} alocacoes={alocacoes} onAdd={addItem} onRemove={removeItem} onChangeQty={changeQty} />
           </div>
           <div className="mt-4 flex gap-2">
             <button onClick={handleSave} disabled={isPending} className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95 disabled:opacity-50" style={{ background: ACCENT, color: "#1C1C1C" }}>
@@ -430,7 +445,7 @@ export function MaletasUI({
                   {isLoadingItems ? (
                     <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Carregando produtos...</p>
                   ) : (
-                    <ItemsEditor currentItems={editItems} produtos={produtos} onAdd={addEditItem} onRemove={removeEditItem} onChangeQty={changeEditQty} />
+                    <ItemsEditor currentItems={editItems} produtos={produtos} alocacoes={alocacoes} onAdd={addEditItem} onRemove={removeEditItem} onChangeQty={changeEditQty} />
                   )}
                 </div>
                 <div className="mt-4 flex gap-2">

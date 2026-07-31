@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createIMaletaServiceClient } from "@/lib/imaleta/supabase";
 import { signProdutos } from "@/lib/imaleta/images";
+import { buscarAlocacoesAtivas } from "@/lib/imaleta/alocacoes";
 import { PageHeader } from "@/components/imaleta/PageHeader";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
 import { MaletasUI } from "./MaletasUI";
@@ -11,7 +12,7 @@ export default async function MaletasPage() {
   const user = (await getCurrentUser())!;
   const supabase = createIMaletaServiceClient();
 
-  const [{ data: maletas }, { data: vendedores }, { data: produtos }] = await Promise.all([
+  const [{ data: maletas }, { data: vendedores }, { data: produtos }, alocacoes] = await Promise.all([
     supabase
       .from("maletas")
       .select("*, vendedores(nome)")
@@ -32,6 +33,7 @@ export default async function MaletasPage() {
       .eq("status", "active")
       .is("deleted_at", null)
       .order("nome"),
+    buscarAlocacoesAtivas(supabase, user.id),
   ]);
 
   const produtosSigned = await signProdutos(
@@ -48,6 +50,7 @@ export default async function MaletasPage() {
         initial={(maletas as Maleta[]) ?? []}
         vendedores={(vendedores as Pick<Vendedor, "id" | "nome">[]) ?? []}
         produtos={produtosSigned}
+        alocacoes={alocacoes}
       />
     </div>
   );
