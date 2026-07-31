@@ -371,7 +371,7 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
             codigo_barras: form.codigo_barras || undefined,
             imagem_url: imagemPath,
           });
-          setProdutos((prev) => [...prev, { ...novo, imagem_signed_url: imagemSigned }]);
+          setProdutos((prev) => [{ ...novo, imagem_signed_url: imagemSigned }, ...prev]);
           setShowForm(false);
           toast.success("Produto criado");
         }

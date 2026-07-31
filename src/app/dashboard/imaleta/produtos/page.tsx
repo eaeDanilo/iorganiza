@@ -15,7 +15,7 @@ export default async function ProdutosPage() {
     .select("*")
     .eq("user_id", user.id)
     .is("deleted_at", null)
-    .order("created_at");
+    .order("created_at", { ascending: false });
 
   const produtos = await signProdutos((data as Produto[]) ?? []);
 
