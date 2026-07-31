@@ -45,17 +45,6 @@ const nextConfig = {
       bodySizeLimit: '6mb',
     },
   },
-  // Permite o otimizador de imagens do Next buscar as URLs assinadas do
-  // Supabase Storage (fotos de produto do iMaleta) e servi-las já redimensionadas.
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-        pathname: '/storage/v1/object/sign/**',
-      },
-    ],
-  },
   async headers() {
     const headers = [...baseSecurityHeaders, ...(isProd ? prodOnlyHeaders : [])];
     return [{ source: '/(.*)', headers }];

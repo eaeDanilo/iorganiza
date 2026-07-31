@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
@@ -461,11 +460,10 @@ export function ProdutosUI({ initial }: { initial: Produto[] }) {
                 style={{ background: CARD, outline: `1px solid ${BORDER}` }}
               >
                 {p.imagem_signed_url ? (
-                  <Image
+                  <img
                     src={p.imagem_signed_url}
                     alt={p.nome}
-                    width={40}
-                    height={40}
+                    loading="lazy"
                     className="flex-shrink-0 rounded-lg object-cover"
                     style={{ width: 40, height: 40 }}
                   />

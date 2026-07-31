@@ -30,3 +30,4 @@ temporario
 temp1
 temp2
 dbpass.tmp
+.env*
