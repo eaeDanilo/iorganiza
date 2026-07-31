@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 
 const KEY = "imaleta:mostrar-fotos";
 
-/** Preferência (salva no navegador) de exibir ou não as fotos de produto nas listagens. */
+/**
+ * Preferência (salva no navegador) de exibir ou não as fotos de produto nas
+ * listagens. Padrão é oculto — o usuário liga explicitamente se quiser ver.
+ */
 export function useShowImages() {
-  const [showImages, setShowImages] = useState(true);
+  const [showImages, setShowImages] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(KEY);
-    if (stored !== null) setShowImages(stored === "1");
+    setShowImages(localStorage.getItem(KEY) === "1");
   }, []);
 
   function toggle() {
