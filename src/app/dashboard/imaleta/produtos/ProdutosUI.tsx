@@ -2,9 +2,10 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload, Briefcase } from "lucide-react";
+import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload, Briefcase, Eye, EyeOff } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
 import type { Alocacao } from "@/lib/imaleta/alocacoes";
+import { useShowImages } from "@/lib/imaleta/useShowImages";
 import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem } from "../actions";
 import { BarcodeModal } from "./BarcodeModal";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
@@ -278,6 +279,7 @@ export function ProdutosUI({
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showImages, toggle: toggleImages } = useShowImages();
 
   useEffect(() => {
     return () => {
@@ -428,7 +430,16 @@ export function ProdutosUI({
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-end gap-2">
+        <button
+          onClick={toggleImages}
+          title={showImages ? "Ocultar fotos (carrega mais rápido)" : "Mostrar fotos"}
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-white/[0.06]"
+          style={{ color: "rgba(255,255,255,0.6)", outline: `1px solid ${BORDER}` }}
+        >
+          {showImages ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {showImages ? "Ocultar fotos" : "Mostrar fotos"}
+        </button>
         <button
           onClick={() => {
             setShowForm(true);
@@ -466,7 +477,7 @@ export function ProdutosUI({
                 className="flex items-center gap-3 rounded-xl px-4 py-3"
                 style={{ background: CARD, outline: `1px solid ${BORDER}` }}
               >
-                {p.imagem_signed_url ? (
+                {showImages && p.imagem_signed_url ? (
                   <img
                     src={p.imagem_signed_url}
                     alt={p.nome}

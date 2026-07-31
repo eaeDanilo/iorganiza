@@ -2,9 +2,10 @@
 
 import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
-import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine } from "lucide-react";
+import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine, Eye, EyeOff } from "lucide-react";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
 import type { Alocacao } from "@/lib/imaleta/alocacoes";
+import { useShowImages } from "@/lib/imaleta/useShowImages";
 import { criarMaleta, excluirMaleta, atualizarMaleta, buscarItensMaleta } from "../actions";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
 
@@ -60,6 +61,7 @@ function ItemsEditor({
   const [barcode, setBarcode] = useState("");
   const [scanning, setScanning] = useState(false);
   const barcodeRef = useRef<HTMLInputElement>(null);
+  const { showImages, toggle: toggleImages } = useShowImages();
 
   function processCode(raw: string) {
     const code = raw.trim().toUpperCase();
@@ -80,9 +82,21 @@ function ItemsEditor({
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
-        Produtos na maleta
-      </p>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+          Produtos na maleta
+        </p>
+        <button
+          type="button"
+          onClick={toggleImages}
+          title={showImages ? "Ocultar fotos (carrega mais rápido)" : "Mostrar fotos"}
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.06]"
+          style={{ color: "rgba(255,255,255,0.5)" }}
+        >
+          {showImages ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          {showImages ? "Ocultar fotos" : "Mostrar fotos"}
+        </button>
+      </div>
       <form onSubmit={handleBarcodeSubmit} className="mb-3 flex gap-2">
         <input
           ref={barcodeRef}
@@ -152,7 +166,7 @@ function ItemsEditor({
             return (
               <div key={item.produto_id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: "rgba(255,255,255,0.04)" }}>
                 <div className="flex items-center gap-2.5">
-                  {prod?.imagem_signed_url ? (
+                  {showImages && prod?.imagem_signed_url ? (
                     <img
                       src={prod.imagem_signed_url}
                       alt={prod.nome}
