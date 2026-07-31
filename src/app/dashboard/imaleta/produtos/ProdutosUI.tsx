@@ -2,11 +2,11 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload, Briefcase, Eye, EyeOff } from "lucide-react";
+import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload, Briefcase, Eye, EyeOff, RotateCcw, Clock } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
 import type { Alocacao } from "@/lib/imaleta/alocacoes";
 import { useShowImages } from "@/lib/imaleta/useShowImages";
-import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem } from "../actions";
+import { criarProduto, atualizarProduto, excluirProduto, uploadProdutoImagem, restaurarProduto } from "../actions";
 import { BarcodeModal } from "./BarcodeModal";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
 import { CameraCapture } from "@/components/imaleta/CameraCapture";
@@ -262,12 +262,16 @@ function ProductForm({
 
 export function ProdutosUI({
   initial,
+  vendidos,
   alocacoes,
 }: {
   initial: Produto[];
+  vendidos: Produto[];
   alocacoes: Record<string, Alocacao>;
 }) {
   const [produtos, setProdutos] = useState(initial);
+  const [vendidosList, setVendidosList] = useState(vendidos);
+  const [tab, setTab] = useState<"ativos" | "vendidos">("ativos");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(empty);
@@ -277,9 +281,32 @@ export function ProdutosUI({
   const [imagemPathAtual, setImagemPathAtual] = useState<string | null>(null); // path (persistência)
   const [barcodeProduto, setBarcodeProduto] = useState<Produto | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showImages, toggle: toggleImages } = useShowImages();
+
+  function handleRestaurar(id: string) {
+    setRestoringId(id);
+    startTransition(async () => {
+      try {
+        await restaurarProduto(id);
+        const p = vendidosList.find((v) => v.id === id);
+        setVendidosList((prev) => prev.filter((v) => v.id !== id));
+        if (p) setProdutos((prev) => [{ ...p, status: "active" }, ...prev]);
+        toast.success("Produto restaurado");
+      } catch (e: any) {
+        toast.error(e.message);
+      } finally {
+        setRestoringId(null);
+      }
+    });
+  }
+
+  function diasRestantes(updatedAt: string): number {
+    const passados = (Date.now() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+    return Math.max(0, Math.ceil(3 - passados));
+  }
 
   useEffect(() => {
     return () => {
@@ -430,39 +457,135 @@ export function ProdutosUI({
 
   return (
     <div>
-      <div className="mb-4 flex justify-end gap-2">
-        <button
-          onClick={toggleImages}
-          title={showImages ? "Ocultar fotos (carrega mais rápido)" : "Mostrar fotos"}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-white/[0.06]"
-          style={{ color: "rgba(255,255,255,0.6)", outline: `1px solid ${BORDER}` }}
-        >
-          {showImages ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {showImages ? "Ocultar fotos" : "Mostrar fotos"}
-        </button>
-        <button
-          onClick={() => {
-            setShowForm(true);
-            setEditingId(null);
-            setForm(empty);
-            setImagemFile(null);
-            setImagemPreview(null);
-            setImagemUrlAtual(null);
-            setImagemPathAtual(null);
-          }}
-          className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95"
-          style={{ background: ACCENT, color: "#1C1C1C" }}
-        >
-          <Plus className="h-4 w-4" />
-          Novo produto
-        </button>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex gap-1 rounded-lg p-1" style={{ background: "rgba(255,255,255,0.04)", outline: `1px solid ${BORDER}` }}>
+          {(["ativos", "vendidos"] as const).map((t) => {
+            const count = t === "ativos" ? produtos.length : vendidosList.length;
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                style={tab === t ? { background: ACCENT, color: "#1C1C1C" } : { color: "rgba(255,255,255,0.5)" }}
+              >
+                {t === "ativos" ? "Ativos" : "Vendidos"}
+                {count > 0 && (
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
+                    style={
+                      tab === t
+                        ? { background: "rgba(28,28,28,0.18)", color: "#1C1C1C" }
+                        : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
+                    }
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={toggleImages}
+            title={showImages ? "Ocultar fotos (carrega mais rápido)" : "Mostrar fotos"}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-white/[0.06]"
+            style={{ color: "rgba(255,255,255,0.6)", outline: `1px solid ${BORDER}` }}
+          >
+            {showImages ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showImages ? "Ocultar fotos" : "Mostrar fotos"}
+          </button>
+          {tab === "ativos" && (
+            <button
+              onClick={() => {
+                setShowForm(true);
+                setEditingId(null);
+                setForm(empty);
+                setImagemFile(null);
+                setImagemPreview(null);
+                setImagemUrlAtual(null);
+                setImagemPathAtual(null);
+              }}
+              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:brightness-95"
+              style={{ background: ACCENT, color: "#1C1C1C" }}
+            >
+              <Plus className="h-4 w-4" />
+              Novo produto
+            </button>
+          )}
+        </div>
       </div>
 
-      {showForm && !editingId && (
+      {tab === "vendidos" && (
+        <p className="mb-3 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+          Produtos vendidos numa conferência ficam aqui por 3 dias e depois são excluídos automaticamente para liberar espaço de armazenamento das fotos.
+        </p>
+      )}
+
+      {tab === "ativos" && showForm && !editingId && (
         <ProductForm title="Novo produto" showBarcode {...sharedFormProps} />
       )}
 
-      {produtos.length === 0 && !showForm ? (
+      {tab === "vendidos" ? (
+        vendidosList.length === 0 ? (
+          <div className="rounded-xl p-10 text-center" style={{ background: CARD, outline: `1px solid ${BORDER}` }}>
+            <p style={{ color: "rgba(255,255,255,0.35)" }}>Nenhum produto vendido nos últimos 3 dias.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {vendidosList.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-3 rounded-xl px-4 py-3"
+                style={{ background: CARD, outline: `1px solid ${BORDER}` }}
+              >
+                {showImages && p.imagem_signed_url ? (
+                  <img
+                    src={p.imagem_signed_url}
+                    alt={p.nome}
+                    loading="lazy"
+                    className="flex-shrink-0 rounded-lg object-cover opacity-50"
+                    style={{ width: 40, height: 40 }}
+                  />
+                ) : (
+                  <div
+                    className="flex flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+                    style={{ width: 40, height: 40, background: "rgba(222,218,211,0.08)", color: "rgba(222,218,211,0.3)" }}
+                  >
+                    {p.nome.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-white">{p.nome}</p>
+                  <p className="mt-0.5 font-mono text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {p.codigo_barras}
+                    {p.preco != null && (
+                      <span className="ml-3 font-sans">R$ {Number(p.preco).toFixed(2)}</span>
+                    )}
+                  </p>
+                  <span
+                    className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)" }}
+                  >
+                    <Clock className="h-2.5 w-2.5" />
+                    Exclui em {diasRestantes(p.updated_at)} dia{diasRestantes(p.updated_at) === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleRestaurar(p.id)}
+                  disabled={restoringId === p.id || isPending}
+                  title="Restaurar para Produtos ativos"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/[0.06] disabled:opacity-50"
+                  style={{ color: ACCENT }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Restaurar
+                </button>
+              </div>
+            ))}
+          </div>
+        )
+      ) : produtos.length === 0 && !showForm ? (
         <div className="rounded-xl p-10 text-center" style={{ background: CARD, outline: `1px solid ${BORDER}` }}>
           <p style={{ color: "rgba(255,255,255,0.35)" }}>Nenhum produto cadastrado.</p>
         </div>

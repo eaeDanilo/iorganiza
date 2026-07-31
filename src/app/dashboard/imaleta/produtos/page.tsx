@@ -8,20 +8,36 @@ import { ProdutosUI } from "./ProdutosUI";
 
 export const dynamic = "force-dynamic";
 
+const VENDIDOS_DIAS = 3;
+
 export default async function ProdutosPage() {
   const user = (await getCurrentUser())!;
   const supabase = createIMaletaServiceClient();
-  const [{ data }, alocacoes] = await Promise.all([
+  const cutoff = new Date(Date.now() - VENDIDOS_DIAS * 24 * 60 * 60 * 1000).toISOString();
+
+  const [{ data }, { data: vendidosData }, alocacoes] = await Promise.all([
     supabase
       .from("produtos")
       .select("*")
       .eq("user_id", user.id)
+      .eq("status", "active")
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("produtos")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "inactive")
+      .is("deleted_at", null)
+      .gte("updated_at", cutoff)
+      .order("updated_at", { ascending: false }),
     buscarAlocacoesAtivas(supabase, user.id),
   ]);
 
-  const produtos = await signProdutos((data as Produto[]) ?? []);
+  const [produtos, vendidos] = await Promise.all([
+    signProdutos((data as Produto[]) ?? []),
+    signProdutos((vendidosData as Produto[]) ?? []),
+  ]);
 
   return (
     <div>
@@ -29,7 +45,7 @@ export default async function ProdutosPage() {
         title="Produtos"
         description="Cadastre produtos e gere códigos de barras para imprimir."
       />
-      <ProdutosUI initial={produtos} alocacoes={alocacoes} />
+      <ProdutosUI initial={produtos} vendidos={vendidos} alocacoes={alocacoes} />
     </div>
   );
 }

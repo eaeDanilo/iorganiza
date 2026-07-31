@@ -425,20 +425,56 @@ export async function finalizarConferencia(
 
   if (!conf) throw new Error("Conferência não encontrada");
 
+  const agora = new Date().toISOString();
+
+  const [{ data: maletaItems }, { data: confItems }] = await Promise.all([
+    supabase.from("maleta_items").select("produto_id, quantidade").eq("maleta_id", conf.maleta_id),
+    supabase.from("conferencia_items").select("produto_id, quantidade_retornada").eq("conferencia_id", conferenciaId),
+  ]);
+
+  const retornadoPorProduto = new Map((confItems ?? []).map((c) => [c.produto_id, c.quantidade_retornada]));
+  const vendidoIds = (maletaItems ?? [])
+    .filter((mi) => mi.quantidade - (retornadoPorProduto.get(mi.produto_id) ?? 0) > 0)
+    .map((mi) => mi.produto_id);
+
   await supabase
     .from("conferencias")
     .update({
       status: "finalizada",
       observacoes: observacoes?.trim() || null,
-      finalizada_at: new Date().toISOString(),
+      finalizada_at: agora,
     })
     .eq("id", conferenciaId);
 
   await supabase
     .from("maletas")
-    .update({ status: "conferida", updated_at: new Date().toISOString() })
+    .update({ status: "conferida", updated_at: agora })
     .eq("id", conf.maleta_id);
 
+  // Produtos vendidos saem de "Produtos" e vão para a aba "Vendidos" por 3
+  // dias (ver purge-vendidos-imaleta), até serem excluídos para liberar
+  // espaço de armazenamento das fotos.
+  if (vendidoIds.length > 0) {
+    await supabase
+      .from("produtos")
+      .update({ status: "inactive", updated_at: agora })
+      .eq("user_id", userId)
+      .in("id", vendidoIds);
+  }
+
   revalidatePath("/dashboard/imaleta/conferencia");
+  revalidatePath("/dashboard/imaleta/produtos");
   revalidatePath("/dashboard/imaleta");
+}
+
+export async function restaurarProduto(id: string) {
+  const userId = await getUserId();
+  const supabase = createIMaletaServiceClient();
+  const { error } = await supabase
+    .from("produtos")
+    .update({ status: "active", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw new Error("Erro ao restaurar produto: " + error.message);
+  revalidatePath("/dashboard/imaleta/produtos");
 }
