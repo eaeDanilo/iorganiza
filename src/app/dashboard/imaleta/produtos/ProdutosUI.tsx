@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { Plus, Barcode, Pencil, Trash2, X, Check, ImageIcon, ScanLine, Camera, Upload, Briefcase, Eye, EyeOff, RotateCcw, Clock } from "lucide-react";
 import type { Produto } from "@/lib/imaleta/types";
@@ -34,6 +34,8 @@ interface FormState {
 }
 
 const empty: FormState = { nome: "", descricao: "", preco: "", codigo_barras: "" };
+
+const NOMES_DATALIST_ID = "produto-nomes-sugeridos";
 
 // Limite de upload de imagem. Deve ficar <= bodySizeLimit dos Server Actions
 // (next.config.js) e à checagem em uploadProdutoImagem.
@@ -180,6 +182,8 @@ function ProductForm({
           placeholder="Nome *"
           value={form.nome}
           onChange={(e) => onChange({ ...form, nome: e.target.value })}
+          list={NOMES_DATALIST_ID}
+          autoComplete="off"
           style={inputStyle}
         />
         {showBarcode ? (
@@ -285,6 +289,13 @@ export function ProdutosUI({
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showImages, toggle: toggleImages } = useShowImages();
+
+  const nomesSugeridos = useMemo(() => {
+    const nomes = new Set<string>();
+    for (const p of produtos) nomes.add(p.nome);
+    for (const p of vendidosList) nomes.add(p.nome);
+    return [...nomes].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [produtos, vendidosList]);
 
   function handleRestaurar(id: string) {
     setRestoringId(id);
@@ -457,6 +468,11 @@ export function ProdutosUI({
 
   return (
     <div>
+      <datalist id={NOMES_DATALIST_ID}>
+        {nomesSugeridos.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex gap-1 rounded-lg p-1" style={{ background: "rgba(255,255,255,0.04)", outline: `1px solid ${BORDER}` }}>
           {(["ativos", "vendidos"] as const).map((t) => {
