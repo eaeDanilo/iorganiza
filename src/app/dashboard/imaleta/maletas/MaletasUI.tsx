@@ -405,18 +405,11 @@ export function MaletasUI({
           <div class="meta">Impresso em ${escapeHtml(new Date().toLocaleDateString("pt-BR"))}</div>
         </header>`;
 
-      const catBlocosHtml = categoriasOrdenadas.map(([nomeCat, precos]) => {
-        const subtotal = precos.reduce((s, p) => s + p, 0);
-        const linhasPreco = precos
-          .map((p) => `<div class="preco-row"><span>R$</span><span>${fmtNum(p)}</span></div>`)
-          .join("");
-        return `
-          <div class="cat">
-            <div class="cat-header">${escapeHtml(nomeCat)} N${String(precos.length).padStart(2, "0")}</div>
-            ${linhasPreco}
-            <div class="cat-sub"><span>R$</span><span>${fmtNum(subtotal)}</span></div>
-          </div>`;
-      });
+      const cats = categoriasOrdenadas.map(([nomeCat, precos]) => ({
+        header: `${nomeCat} N${String(precos.length).padStart(2, "0")}`,
+        precos,
+        subtotal: precos.reduce((s, p) => s + p, 0),
+      }));
 
       const CSS = `
         @page { size: A4; margin: 12mm 10mm; }
@@ -449,9 +442,10 @@ export function MaletasUI({
         .linha-assinatura { flex: 1; border-top: 0.3mm solid #333; padding-top: 1.5mm; font-size: 2.6mm; color: #555; text-align: center; }
       `;
 
-      // Mede a altura real (renderizada) do cabeçalho e de cada bloco de categoria
-      // numa div escondida, e distribui os blocos em páginas/colunas com base
-      // nessa medida real — evita o bug de página em branco do CSS de colunas.
+      // Mede a altura real (renderizada) do cabeçalho da página, do cabeçalho de
+      // categoria, de uma linha de preço e da linha de subtotal numa div escondida.
+      // Com essas medidas, distribuo linha a linha em páginas/colunas — categorias
+      // grandes viram vários blocos, cada um repetindo o cabeçalho da categoria.
       const COLS = 4;
       const MARGIN_MM = 12;
       const GAP_MM = 4;
@@ -462,33 +456,93 @@ export function MaletasUI({
 
       const medidor = document.createElement("div");
       medidor.style.cssText = "position:fixed;left:-9999px;top:0;visibility:hidden;";
-      medidor.innerHTML = `<style>${CSS}</style><div style="width:${contentWidthMm}mm">${headerHtml}</div><div style="width:${colWidthMm}mm">${catBlocosHtml.join("")}</div>`;
+      medidor.innerHTML = `
+        <style>${CSS}</style>
+        <div style="width:${contentWidthMm}mm">${headerHtml}</div>
+        <div style="width:${colWidthMm}mm" class="cat">
+          <div class="cat-header">Amostra</div>
+          <div class="preco-row"><span>R$</span><span>0,00</span></div>
+          <div class="cat-sub"><span>R$</span><span>0,00</span></div>
+        </div>`;
       document.body.appendChild(medidor);
-      const headerHeightPx = (medidor.querySelector("header") as HTMLElement).offsetHeight;
-      const catHeightsPx = Array.from(medidor.querySelectorAll(".cat")).map((el) => (el as HTMLElement).offsetHeight);
+      const pageHeaderHeightPx = (medidor.querySelector("header") as HTMLElement).offsetHeight;
+      const catWrapper = medidor.querySelector(".cat") as HTMLElement;
+      const catHeaderHeightPx = (medidor.querySelector(".cat-header") as HTMLElement).offsetHeight;
+      const rowHeightPx = (medidor.querySelector(".preco-row") as HTMLElement).offsetHeight;
+      const subHeightPx = (medidor.querySelector(".cat-sub") as HTMLElement).offsetHeight;
+      const overheadPx = catWrapper.offsetHeight - catHeaderHeightPx - rowHeightPx - subHeightPx;
+      const gapPx = mmToPx(3); // gap vertical entre blocos empilhados numa coluna (.coluna { gap: 3mm })
       document.body.removeChild(medidor);
 
-      const paginas: number[][][] = [[[], [], [], []]];
+      interface Chunk { header: string; precos: number[]; subtotal: number | null }
+      const paginas: Chunk[][][] = [[[], [], [], []]];
       let colHeights = [0, 0, 0, 0];
-      let budget = pageHeightPx - headerHeightPx;
-      for (let idx = 0; idx < catBlocosHtml.length; idx++) {
-        const h = catHeightsPx[idx] + mmToPx(3);
+      let budget = pageHeightPx - pageHeaderHeightPx;
+
+      function proximaColuna() {
         let ci = 0;
         for (let c = 1; c < COLS; c++) if (colHeights[c] < colHeights[ci]) ci = c;
-        if (colHeights[ci] + h > budget && colHeights.some((v) => v > 0)) {
-          paginas.push([[], [], [], []]);
-          colHeights = [0, 0, 0, 0];
-          budget = pageHeightPx;
-          ci = 0;
-        }
-        paginas[paginas.length - 1][ci].push(idx);
-        colHeights[ci] += h;
+        return ci;
       }
+      function novaPagina() {
+        paginas.push([[], [], [], []]);
+        colHeights = [0, 0, 0, 0];
+        budget = pageHeightPx;
+      }
+
+      for (const cat of cats) {
+        let rowStart = 0;
+        let remaining = cat.precos.length;
+        let subtotalPendente = true;
+        while (remaining > 0 || subtotalPendente) {
+          let ci = proximaColuna();
+          let gap = colHeights[ci] > 0 ? gapPx : 0;
+          let avail = budget - colHeights[ci] - gap;
+          const minimo = catHeaderHeightPx + overheadPx + (remaining > 0 ? rowHeightPx : subHeightPx);
+          if (avail < minimo && colHeights.some((v) => v > 0)) {
+            novaPagina();
+            ci = proximaColuna();
+            gap = 0;
+            avail = budget - colHeights[ci];
+          }
+
+          if (remaining > 0) {
+            const roomForRows = avail - catHeaderHeightPx - overheadPx;
+            const rowsFit = Math.max(1, Math.min(remaining, Math.floor(roomForRows / rowHeightPx)));
+            let incluiSubtotal = false;
+            if (rowsFit === remaining && roomForRows - rowsFit * rowHeightPx >= subHeightPx) {
+              incluiSubtotal = true;
+            }
+            const chunk: Chunk = {
+              header: cat.header,
+              precos: cat.precos.slice(rowStart, rowStart + rowsFit),
+              subtotal: incluiSubtotal ? cat.subtotal : null,
+            };
+            paginas[paginas.length - 1][ci].push(chunk);
+            colHeights[ci] += gap + catHeaderHeightPx + overheadPx + rowsFit * rowHeightPx + (incluiSubtotal ? subHeightPx : 0);
+            rowStart += rowsFit;
+            remaining -= rowsFit;
+            if (remaining === 0) subtotalPendente = !incluiSubtotal;
+          } else {
+            const chunk: Chunk = { header: cat.header, precos: [], subtotal: cat.subtotal };
+            paginas[paginas.length - 1][ci].push(chunk);
+            colHeights[ci] += gap + catHeaderHeightPx + overheadPx + subHeightPx;
+            subtotalPendente = false;
+          }
+        }
+      }
+
+      const chunkHtml = (c: Chunk) => `
+        <div class="cat">
+          <div class="cat-header">${escapeHtml(c.header)}</div>
+          ${c.precos.map((p) => `<div class="preco-row"><span>R$</span><span>${fmtNum(p)}</span></div>`).join("")}
+          ${c.subtotal != null ? `<div class="cat-sub"><span>R$</span><span>${fmtNum(c.subtotal)}</span></div>` : ""}
+        </div>`;
 
       const paginasHtml = paginas
         .map((colunas, i) => {
           const colunasHtml = colunas
-            .map((idxs) => `<div class="coluna">${idxs.map((idx) => catBlocosHtml[idx]).join("")}</div>`)
+            .map((chunks) => `<div class="coluna">${chunks.map(chunkHtml).join("")}</div>`)
             .join("");
           return `<div class="pagina"${i > 0 ? ' style="page-break-before:always;"' : ""}>${colunasHtml}</div>`;
         })
