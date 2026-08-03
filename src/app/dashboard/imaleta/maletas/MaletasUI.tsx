@@ -2,12 +2,22 @@
 
 import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
-import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine, Eye, EyeOff } from "lucide-react";
+import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine, Eye, EyeOff, Printer } from "lucide-react";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
 import type { Alocacao } from "@/lib/imaleta/alocacoes";
 import { useShowImages } from "@/lib/imaleta/useShowImages";
+import { formatCurrency } from "@/lib/utils";
 import { criarMaleta, excluirMaleta, atualizarMaleta, buscarItensMaleta } from "../actions";
 import { BarcodeScanner } from "@/components/imaleta/BarcodeScanner";
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 const ACCENT = "#DEDAD3";
 const BORDER = "rgba(222,218,211,0.08)";
@@ -233,6 +243,7 @@ export function MaletasUI({
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isLoadingItems, startLoadingItems] = useTransition();
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   // Create item helpers
   function addItem(produtoId: string) {
@@ -348,6 +359,111 @@ export function MaletasUI({
         toast.error(e.message);
       }
     });
+  }
+
+  async function handlePrintMaleta(m: Maleta) {
+    setPrintingId(m.id);
+    try {
+      const itensMaleta = await buscarItensMaleta(m.id);
+      const linhas = (itensMaleta as any[])
+        .map((i) => ({
+          nome: i.produtos?.nome ?? "Produto",
+          preco: i.produtos?.preco ?? null,
+          quantidade: i.quantidade ?? 1,
+        }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+      if (linhas.length === 0) {
+        toast.error("Maleta sem produtos para imprimir");
+        return;
+      }
+
+      const total = linhas.reduce((sum, l) => sum + (l.preco ?? 0) * l.quantidade, 0);
+      const vendedorNome = vendedores.find((v) => v.id === m.vendedor_id)?.nome ?? (m as any).vendedores?.nome ?? "";
+
+      const linhasHtml = linhas
+        .map(
+          (l) => `
+            <tr>
+              <td class="check"><span class="box"></span></td>
+              <td class="nome">${escapeHtml(l.nome)}${l.quantidade > 1 ? ` <span class="qtd">x${l.quantidade}</span>` : ""}</td>
+              <td class="preco">${l.preco != null ? escapeHtml(formatCurrency(l.preco)) : "—"}</td>
+            </tr>`
+        )
+        .join("");
+
+      const printWindow = window.open("", "_blank", "width=850,height=1100");
+      if (!printWindow) return;
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${escapeHtml(m.nome)}</title>
+            <style>
+              @page { size: A4; margin: 18mm 16mm; }
+              * { box-sizing: border-box; }
+              body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
+              header {
+                display: flex; justify-content: space-between; align-items: flex-end;
+                border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 18px;
+              }
+              h1 { font-size: 20px; margin: 0 0 6px; }
+              .meta { font-size: 12px; color: #444; line-height: 1.6; }
+              .meta strong { color: #111; }
+              table { width: 100%; border-collapse: collapse; }
+              th {
+                text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+                color: #666; border-bottom: 1px solid #999; padding: 6px 4px;
+              }
+              td { padding: 11px 4px; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: middle; }
+              td.check { width: 30px; }
+              .box { display: inline-block; width: 16px; height: 16px; border: 1.5px solid #333; }
+              td.preco { text-align: right; width: 100px; font-variant-numeric: tabular-nums; }
+              .qtd { color: #888; font-size: 12px; }
+              tfoot td { border-bottom: none; border-top: 2px solid #111; font-weight: 700; padding-top: 12px; }
+              .assinaturas { margin-top: 60px; display: flex; gap: 40px; }
+              .linha-assinatura { flex: 1; border-top: 1px solid #333; padding-top: 6px; font-size: 11px; color: #555; text-align: center; }
+            </style>
+          </head>
+          <body>
+            <header>
+              <div>
+                <h1>${escapeHtml(m.nome)}</h1>
+                <div class="meta">
+                  <div><strong>Vendedor(a):</strong> ${escapeHtml(vendedorNome)}</div>
+                  <div><strong>Período:</strong> ${escapeHtml(m.periodo_inicio)}</div>
+                </div>
+              </div>
+              <div class="meta">Impresso em ${escapeHtml(new Date().toLocaleDateString("pt-BR"))}</div>
+            </header>
+            <table>
+              <thead>
+                <tr><th></th><th>Produto</th><th style="text-align:right">Valor</th></tr>
+              </thead>
+              <tbody>${linhasHtml}</tbody>
+              <tfoot>
+                <tr>
+                  <td></td>
+                  <td>Total (${linhas.length} ${linhas.length === 1 ? "item" : "itens"})</td>
+                  <td class="preco">${escapeHtml(formatCurrency(total))}</td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="assinaturas">
+              <div class="linha-assinatura">Total vendido</div>
+              <div class="linha-assinatura">Total devolvido</div>
+              <div class="linha-assinatura">Assinatura</div>
+            </div>
+            <script>window.onload = () => { window.print(); };</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao gerar impressão");
+    } finally {
+      setPrintingId(null);
+    }
   }
 
   function handleDeleteConfirm(id: string) {
@@ -488,6 +604,15 @@ export function MaletasUI({
                   <span className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ background: "rgba(222,218,211,0.08)", color: statusColor[m.status] ?? ACCENT }}>
                     {statusLabel[m.status] ?? m.status}
                   </span>
+                  <button
+                    onClick={() => handlePrintMaleta(m)}
+                    disabled={printingId === m.id}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-white/[0.06] disabled:opacity-50"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    title="Imprimir lista de produtos (A4)"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                  </button>
                   {m.status === "aberta" && (
                     <>
                       <button
