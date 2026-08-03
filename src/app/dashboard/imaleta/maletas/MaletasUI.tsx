@@ -380,16 +380,32 @@ export function MaletasUI({
 
       const total = linhas.reduce((sum, l) => sum + (l.preco ?? 0) * l.quantidade, 0);
       const vendedorNome = vendedores.find((v) => v.id === m.vendedor_id)?.nome ?? (m as any).vendedores?.nome ?? "";
+      const N = linhas.length;
+      const fmtNum = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      const linhasHtml = linhas
-        .map(
-          (l) => `
-            <tr>
-              <td class="check"><span class="box"></span></td>
-              <td class="nome">${escapeHtml(l.nome)}${l.quantidade > 1 ? ` <span class="qtd">x${l.quantidade}</span>` : ""}</td>
-              <td class="preco">${l.preco != null ? escapeHtml(formatCurrency(l.preco)) : "—"}</td>
-            </tr>`
-        )
+      // Agrupa por nome do produto (categoria): só os preços aparecem embaixo do
+      // cabeçalho, sem repetir o nome em cada linha — economiza muito espaço.
+      const categorias = new Map<string, number[]>();
+      for (const l of linhas) {
+        const precos = categorias.get(l.nome) ?? [];
+        for (let q = 0; q < l.quantidade; q++) precos.push(l.preco ?? 0);
+        categorias.set(l.nome, precos);
+      }
+      const categoriasOrdenadas = [...categorias.entries()].sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
+
+      const categoriasHtml = categoriasOrdenadas
+        .map(([nomeCat, precos]) => {
+          const subtotal = precos.reduce((s, p) => s + p, 0);
+          const linhasPreco = precos
+            .map((p) => `<div class="preco-row"><span>R$</span><span>${fmtNum(p)}</span></div>`)
+            .join("");
+          return `
+            <div class="cat">
+              <div class="cat-header">${escapeHtml(nomeCat)} N${String(precos.length).padStart(2, "0")}</div>
+              ${linhasPreco}
+              <div class="cat-sub"><span>R$</span><span>${fmtNum(subtotal)}</span></div>
+            </div>`;
+        })
         .join("");
 
       const printWindow = window.open("", "_blank", "width=850,height=1100");
@@ -400,29 +416,60 @@ export function MaletasUI({
           <head>
             <title>${escapeHtml(m.nome)}</title>
             <style>
-              @page { size: A4; margin: 18mm 16mm; }
+              @page { size: A4; margin: 12mm 10mm; }
               * { box-sizing: border-box; }
               body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
               header {
                 display: flex; justify-content: space-between; align-items: flex-end;
-                border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 18px;
+                border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px;
+                break-inside: avoid;
               }
-              h1 { font-size: 20px; margin: 0 0 6px; }
-              .meta { font-size: 12px; color: #444; line-height: 1.6; }
+              h1 { font-size: 18px; margin: 0 0 5px; }
+              .meta { font-size: 11px; color: #444; line-height: 1.5; }
               .meta strong { color: #111; }
-              table { width: 100%; border-collapse: collapse; }
-              th {
-                text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-                color: #666; border-bottom: 1px solid #999; padding: 6px 4px;
+              .grid {
+                column-count: 4;
+                column-gap: 4mm;
+                column-fill: auto;
               }
-              td { padding: 11px 4px; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: middle; }
-              td.check { width: 30px; }
-              .box { display: inline-block; width: 16px; height: 16px; border: 1.5px solid #333; }
-              td.preco { text-align: right; width: 100px; font-variant-numeric: tabular-nums; }
-              .qtd { color: #888; font-size: 12px; }
-              tfoot td { border-bottom: none; border-top: 2px solid #111; font-weight: 700; padding-top: 12px; }
-              .assinaturas { margin-top: 60px; display: flex; gap: 40px; }
-              .linha-assinatura { flex: 1; border-top: 1px solid #333; padding-top: 6px; font-size: 11px; color: #555; text-align: center; }
+              .cat {
+                break-inside: avoid-column;
+                margin-bottom: 4mm;
+                border: 0.3mm solid #999;
+              }
+              .cat-header {
+                background: #FCE0B8;
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 2.6mm;
+                padding: 1.3mm 1.5mm;
+                border-bottom: 0.3mm solid #999;
+              }
+              .preco-row, .cat-sub {
+                display: flex;
+                justify-content: space-between;
+                font-size: 2.6mm;
+                padding: 0.9mm 1.5mm;
+                border-bottom: 0.3mm solid #ddd;
+                font-variant-numeric: tabular-nums;
+              }
+              .cat-sub {
+                background: #E2E2E2;
+                font-weight: 700;
+                border-bottom: none;
+              }
+              .rodape {
+                break-inside: avoid;
+                margin-top: 4mm;
+                padding-top: 3mm;
+                border-top: 0.6mm solid #111;
+                font-weight: 700;
+                font-size: 3.6mm;
+                display: flex;
+                justify-content: space-between;
+              }
+              .assinaturas { break-inside: avoid; margin-top: 14mm; display: flex; gap: 12mm; }
+              .linha-assinatura { flex: 1; border-top: 0.3mm solid #333; padding-top: 1.5mm; font-size: 2.6mm; color: #555; text-align: center; }
             </style>
           </head>
           <body>
@@ -436,19 +483,11 @@ export function MaletasUI({
               </div>
               <div class="meta">Impresso em ${escapeHtml(new Date().toLocaleDateString("pt-BR"))}</div>
             </header>
-            <table>
-              <thead>
-                <tr><th></th><th>Produto</th><th style="text-align:right">Valor</th></tr>
-              </thead>
-              <tbody>${linhasHtml}</tbody>
-              <tfoot>
-                <tr>
-                  <td></td>
-                  <td>Total (${linhas.length} ${linhas.length === 1 ? "item" : "itens"})</td>
-                  <td class="preco">${escapeHtml(formatCurrency(total))}</td>
-                </tr>
-              </tfoot>
-            </table>
+            <div class="grid">${categoriasHtml}</div>
+            <div class="rodape">
+              <span>Total (${N} ${N === 1 ? "item" : "itens"})</span>
+              <span>${escapeHtml(formatCurrency(total))}</span>
+            </div>
             <div class="assinaturas">
               <div class="linha-assinatura">Total vendido</div>
               <div class="linha-assinatura">Total devolvido</div>
