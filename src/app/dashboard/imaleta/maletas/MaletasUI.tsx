@@ -393,18 +393,104 @@ export function MaletasUI({
       }
       const categoriasOrdenadas = [...categorias.entries()].sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
 
-      const categoriasHtml = categoriasOrdenadas
-        .map(([nomeCat, precos]) => {
-          const subtotal = precos.reduce((s, p) => s + p, 0);
-          const linhasPreco = precos
-            .map((p) => `<div class="preco-row"><span>R$</span><span>${fmtNum(p)}</span></div>`)
+      const headerHtml = `
+        <header>
+          <div>
+            <h1>${escapeHtml(m.nome)}</h1>
+            <div class="meta">
+              <div><strong>Vendedor(a):</strong> ${escapeHtml(vendedorNome)}</div>
+              <div><strong>Período:</strong> ${escapeHtml(m.periodo_inicio)}</div>
+            </div>
+          </div>
+          <div class="meta">Impresso em ${escapeHtml(new Date().toLocaleDateString("pt-BR"))}</div>
+        </header>`;
+
+      const catBlocosHtml = categoriasOrdenadas.map(([nomeCat, precos]) => {
+        const subtotal = precos.reduce((s, p) => s + p, 0);
+        const linhasPreco = precos
+          .map((p) => `<div class="preco-row"><span>R$</span><span>${fmtNum(p)}</span></div>`)
+          .join("");
+        return `
+          <div class="cat">
+            <div class="cat-header">${escapeHtml(nomeCat)} N${String(precos.length).padStart(2, "0")}</div>
+            ${linhasPreco}
+            <div class="cat-sub"><span>R$</span><span>${fmtNum(subtotal)}</span></div>
+          </div>`;
+      });
+
+      const CSS = `
+        @page { size: A4; margin: 12mm 10mm; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
+        header {
+          display: flex; justify-content: space-between; align-items: flex-end;
+          border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px;
+        }
+        h1 { font-size: 18px; margin: 0 0 5px; }
+        .meta { font-size: 11px; color: #444; line-height: 1.5; }
+        .meta strong { color: #111; }
+        .pagina { display: flex; gap: 4mm; align-items: flex-start; }
+        .coluna { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3mm; }
+        .cat { border: 0.3mm solid #999; }
+        .cat-header {
+          background: #FCE0B8; font-weight: 700; text-transform: uppercase;
+          font-size: 2.6mm; padding: 1.3mm 1.5mm; border-bottom: 0.3mm solid #999;
+        }
+        .preco-row, .cat-sub {
+          display: flex; justify-content: space-between; font-size: 2.6mm;
+          padding: 0.9mm 1.5mm; border-bottom: 0.3mm solid #ddd; font-variant-numeric: tabular-nums;
+        }
+        .cat-sub { background: #E2E2E2; font-weight: 700; border-bottom: none; }
+        .rodape {
+          margin-top: 4mm; padding-top: 3mm; border-top: 0.6mm solid #111;
+          font-weight: 700; font-size: 3.6mm; display: flex; justify-content: space-between;
+        }
+        .assinaturas { margin-top: 14mm; display: flex; gap: 12mm; }
+        .linha-assinatura { flex: 1; border-top: 0.3mm solid #333; padding-top: 1.5mm; font-size: 2.6mm; color: #555; text-align: center; }
+      `;
+
+      // Mede a altura real (renderizada) do cabeçalho e de cada bloco de categoria
+      // numa div escondida, e distribui os blocos em páginas/colunas com base
+      // nessa medida real — evita o bug de página em branco do CSS de colunas.
+      const COLS = 4;
+      const MARGIN_MM = 12;
+      const GAP_MM = 4;
+      const contentWidthMm = 210 - 2 * MARGIN_MM;
+      const colWidthMm = (contentWidthMm - (COLS - 1) * GAP_MM) / COLS;
+      const mmToPx = (mm: number) => (mm * 96) / 25.4;
+      const pageHeightPx = mmToPx(297 - 2 * MARGIN_MM) * 0.94; // 6% de folga de segurança
+
+      const medidor = document.createElement("div");
+      medidor.style.cssText = "position:fixed;left:-9999px;top:0;visibility:hidden;";
+      medidor.innerHTML = `<style>${CSS}</style><div style="width:${contentWidthMm}mm">${headerHtml}</div><div style="width:${colWidthMm}mm">${catBlocosHtml.join("")}</div>`;
+      document.body.appendChild(medidor);
+      const headerHeightPx = (medidor.querySelector("header") as HTMLElement).offsetHeight;
+      const catHeightsPx = Array.from(medidor.querySelectorAll(".cat")).map((el) => (el as HTMLElement).offsetHeight);
+      document.body.removeChild(medidor);
+
+      const paginas: number[][][] = [[[], [], [], []]];
+      let colHeights = [0, 0, 0, 0];
+      let budget = pageHeightPx - headerHeightPx;
+      for (let idx = 0; idx < catBlocosHtml.length; idx++) {
+        const h = catHeightsPx[idx] + mmToPx(3);
+        let ci = 0;
+        for (let c = 1; c < COLS; c++) if (colHeights[c] < colHeights[ci]) ci = c;
+        if (colHeights[ci] + h > budget && colHeights.some((v) => v > 0)) {
+          paginas.push([[], [], [], []]);
+          colHeights = [0, 0, 0, 0];
+          budget = pageHeightPx;
+          ci = 0;
+        }
+        paginas[paginas.length - 1][ci].push(idx);
+        colHeights[ci] += h;
+      }
+
+      const paginasHtml = paginas
+        .map((colunas, i) => {
+          const colunasHtml = colunas
+            .map((idxs) => `<div class="coluna">${idxs.map((idx) => catBlocosHtml[idx]).join("")}</div>`)
             .join("");
-          return `
-            <div class="cat">
-              <div class="cat-header">${escapeHtml(nomeCat)} N${String(precos.length).padStart(2, "0")}</div>
-              ${linhasPreco}
-              <div class="cat-sub"><span>R$</span><span>${fmtNum(subtotal)}</span></div>
-            </div>`;
+          return `<div class="pagina"${i > 0 ? ' style="page-break-before:always;"' : ""}>${colunasHtml}</div>`;
         })
         .join("");
 
@@ -415,76 +501,11 @@ export function MaletasUI({
         <html>
           <head>
             <title>${escapeHtml(m.nome)}</title>
-            <style>
-              @page { size: A4; margin: 12mm 10mm; }
-              * { box-sizing: border-box; }
-              body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
-              header {
-                display: flex; justify-content: space-between; align-items: flex-end;
-                border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 10px;
-                break-inside: avoid;
-              }
-              h1 { font-size: 18px; margin: 0 0 5px; }
-              .meta { font-size: 11px; color: #444; line-height: 1.5; }
-              .meta strong { color: #111; }
-              .grid {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4mm;
-              }
-              .cat {
-                flex: 0 0 calc(25% - 3mm);
-                break-inside: avoid;
-                margin-bottom: 0;
-                border: 0.3mm solid #999;
-              }
-              .cat-header {
-                background: #FCE0B8;
-                font-weight: 700;
-                text-transform: uppercase;
-                font-size: 2.6mm;
-                padding: 1.3mm 1.5mm;
-                border-bottom: 0.3mm solid #999;
-              }
-              .preco-row, .cat-sub {
-                display: flex;
-                justify-content: space-between;
-                font-size: 2.6mm;
-                padding: 0.9mm 1.5mm;
-                border-bottom: 0.3mm solid #ddd;
-                font-variant-numeric: tabular-nums;
-              }
-              .cat-sub {
-                background: #E2E2E2;
-                font-weight: 700;
-                border-bottom: none;
-              }
-              .rodape {
-                break-inside: avoid;
-                margin-top: 4mm;
-                padding-top: 3mm;
-                border-top: 0.6mm solid #111;
-                font-weight: 700;
-                font-size: 3.6mm;
-                display: flex;
-                justify-content: space-between;
-              }
-              .assinaturas { break-inside: avoid; margin-top: 14mm; display: flex; gap: 12mm; }
-              .linha-assinatura { flex: 1; border-top: 0.3mm solid #333; padding-top: 1.5mm; font-size: 2.6mm; color: #555; text-align: center; }
-            </style>
+            <style>${CSS}</style>
           </head>
           <body>
-            <header>
-              <div>
-                <h1>${escapeHtml(m.nome)}</h1>
-                <div class="meta">
-                  <div><strong>Vendedor(a):</strong> ${escapeHtml(vendedorNome)}</div>
-                  <div><strong>Período:</strong> ${escapeHtml(m.periodo_inicio)}</div>
-                </div>
-              </div>
-              <div class="meta">Impresso em ${escapeHtml(new Date().toLocaleDateString("pt-BR"))}</div>
-            </header>
-            <div class="grid">${categoriasHtml}</div>
+            ${headerHtml}
+            ${paginasHtml}
             <div class="rodape">
               <span>Total (${N} ${N === 1 ? "item" : "itens"})</span>
               <span>${escapeHtml(formatCurrency(total))}</span>
