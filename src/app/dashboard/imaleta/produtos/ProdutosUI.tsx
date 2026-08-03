@@ -35,11 +35,87 @@ interface FormState {
 
 const empty: FormState = { nome: "", descricao: "", preco: "", codigo_barras: "" };
 
-const NOMES_DATALIST_ID = "produto-nomes-sugeridos";
-
 // Limite de upload de imagem. Deve ficar <= bodySizeLimit dos Server Actions
 // (next.config.js) e à checagem em uploadProdutoImagem.
 const MAX_IMAGE_MB = 5;
+
+// <datalist> não tem UI consistente em navegadores mobile (iOS Safari não
+// mostra o dropdown). Dropdown customizado funciona igual em qualquer aparelho.
+function NomeField({ value, suggestions, onChange }: { value: string; suggestions: string[]; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const filtered = useMemo(() => {
+    const q = value.trim().toLowerCase();
+    const list = q ? suggestions.filter((n) => n.toLowerCase().includes(q) && n.toLowerCase() !== q) : suggestions;
+    return list.slice(0, 30);
+  }, [value, suggestions]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(e: Event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapperRef} style={{ position: "relative" }}>
+      <input
+        placeholder="Nome *"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        autoComplete="off"
+        style={inputStyle}
+      />
+      {open && filtered.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            right: 0,
+            maxHeight: 220,
+            overflowY: "auto",
+            background: "#1f1f1f",
+            border: "1px solid rgba(222,218,211,0.15)",
+            borderRadius: 8,
+            zIndex: 30,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          }}
+        >
+          {filtered.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => { onChange(n); setOpen(false); }}
+              className="hover:bg-white/[0.08]"
+              style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                padding: "10px 12px",
+                fontSize: "14px",
+                color: "white",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ImagePickerProps {
   imagemPreview: string | null;
@@ -133,6 +209,7 @@ interface ProductFormProps {
   title: string;
   showBarcode?: boolean;
   form: FormState;
+  nomesSugeridos: string[];
   onChange: (form: FormState) => void;
   imagemPreview: string | null;
   imagemUrlAtual: string | null;
@@ -149,6 +226,7 @@ function ProductForm({
   title,
   showBarcode,
   form,
+  nomesSugeridos,
   onChange,
   imagemPreview,
   imagemUrlAtual,
@@ -178,13 +256,10 @@ function ProductForm({
         />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <input
-          placeholder="Nome *"
+        <NomeField
           value={form.nome}
-          onChange={(e) => onChange({ ...form, nome: e.target.value })}
-          list={NOMES_DATALIST_ID}
-          autoComplete="off"
-          style={inputStyle}
+          suggestions={nomesSugeridos}
+          onChange={(nome) => onChange({ ...form, nome })}
         />
         {showBarcode ? (
           <div className="flex gap-2">
@@ -454,6 +529,7 @@ export function ProdutosUI({
 
   const sharedFormProps = {
     form,
+    nomesSugeridos,
     onChange: setForm,
     imagemPreview,
     imagemUrlAtual,
@@ -468,12 +544,7 @@ export function ProdutosUI({
 
   return (
     <div>
-      <datalist id={NOMES_DATALIST_ID}>
-        {nomesSugeridos.map((n) => (
-          <option key={n} value={n} />
-        ))}
-      </datalist>
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 rounded-lg p-1" style={{ background: "rgba(255,255,255,0.04)", outline: `1px solid ${BORDER}` }}>
           {(["ativos", "vendidos"] as const).map((t) => {
             const count = t === "ativos" ? produtos.length : vendidosList.length;
@@ -501,7 +572,7 @@ export function ProdutosUI({
             );
           })}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={toggleImages}
             title={showImages ? "Ocultar fotos (carrega mais rápido)" : "Mostrar fotos"}
