@@ -428,13 +428,14 @@ export function MaletasUI({
               .meta { font-size: 11px; color: #444; line-height: 1.5; }
               .meta strong { color: #111; }
               .grid {
-                column-count: 4;
-                column-gap: 4mm;
-                column-fill: auto;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4mm;
               }
               .cat {
-                break-inside: avoid-column;
-                margin-bottom: 4mm;
+                flex: 0 0 calc(25% - 3mm);
+                break-inside: avoid;
+                margin-bottom: 0;
                 border: 0.3mm solid #999;
               }
               .cat-header {
