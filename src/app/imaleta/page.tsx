@@ -117,8 +117,8 @@ export default async function IMaletaLandingPage() {
           className="mt-6 max-w-lg text-lg leading-relaxed"
           style={{ color: "rgba(255,255,255,0.5)" }}
         >
-          Monte maletas para seus vendedores externos, bipe os produtos e saiba exatamente o que
-          foi vendido ao retorno.
+          Monte maletas de consignação, bipe produtos pela câmera do celular ou com scanner de
+          código de barras e tenha controle da conferência: saiba exatamente o que foi vendido.
         </p>
 
         <div className="mt-10 flex items-center gap-4">

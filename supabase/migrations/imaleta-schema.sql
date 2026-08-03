@@ -105,7 +105,7 @@ INSERT INTO public.saas (name, slug, description, price_monthly, features, statu
 VALUES (
   'iMaleta',
   'imaleta',
-  'Gerencie maletas de vendedores externos com código de barras. Monte maletas, envie com o vendedor e na conferência de retorno bipe os produtos para calcular automaticamente o que foi vendido no período.',
+  'Monte maletas de consignação, bipe produtos pela câmera do celular ou com scanner de código de barras e tenha controle da conferência: saiba exatamente o que foi vendido.',
   29.00,
   '["Maletas por vendedor","Geração de código de barras Code 128","Conferência por câmera ou leitor USB","Cálculo automático de vendas","Impressão via impressora mobile","Histórico de conferências"]'::jsonb,
   'active',
