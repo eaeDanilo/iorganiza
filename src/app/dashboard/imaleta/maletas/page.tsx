@@ -28,7 +28,7 @@ export default async function MaletasPage() {
       .order("nome"),
     supabase
       .from("produtos")
-      .select("id, nome, codigo_barras, preco, imagem_url")
+      .select("id, nome, codigo_barras, preco, imagem_url, created_at")
       .eq("user_id", user.id)
       .eq("status", "active")
       .is("deleted_at", null)
@@ -37,7 +37,7 @@ export default async function MaletasPage() {
   ]);
 
   const produtosSigned = await signProdutos(
-    (produtos as Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url">[]) ?? []
+    (produtos as Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "created_at">[]) ?? []
   );
 
   return (

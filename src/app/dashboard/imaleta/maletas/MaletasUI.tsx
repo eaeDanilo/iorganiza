@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
-import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine, Eye, EyeOff, Printer } from "lucide-react";
+import { Plus, Briefcase, Trash2, X, Check, Minus, Pencil, ScanBarcode, ScanLine, Eye, EyeOff, Printer, PackagePlus, Clock } from "lucide-react";
 import type { Maleta, Produto, Vendedor } from "@/lib/imaleta/types";
 import type { Alocacao } from "@/lib/imaleta/alocacoes";
 import { useShowImages } from "@/lib/imaleta/useShowImages";
@@ -62,7 +62,7 @@ function ItemsEditor({
   onChangeQty,
 }: {
   currentItems: ItemEntry[];
-  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url">[];
+  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url" | "created_at">[];
   alocacoes: Record<string, Alocacao>;
   onAdd: (id: string) => void;
   onRemove: (id: string) => void;
@@ -72,6 +72,42 @@ function ItemsEditor({
   const [scanning, setScanning] = useState(false);
   const barcodeRef = useRef<HTMLInputElement>(null);
   const { showImages, toggle: toggleImages } = useShowImages();
+  const [recentDate, setRecentDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  function addAllUnallocated() {
+    const candidatos = produtos.filter(
+      (p) => !currentItems.some((i) => i.produto_id === p.id) && !alocacoes[p.id]
+    );
+    if (candidatos.length === 0) {
+      return void toast.info("Nenhum produto sem maleta para adicionar");
+    }
+    candidatos.forEach((p) => onAdd(p.id));
+    toast.success(`${candidatos.length} produto${candidatos.length > 1 ? "s" : ""} adicionado${candidatos.length > 1 ? "s" : ""}`);
+  }
+
+  function addAllRecent() {
+    const cutoff = new Date(`${recentDate}T00:00:00`);
+    const elegiveis: typeof produtos = [];
+    let bloqueados = 0;
+    for (const p of produtos) {
+      if (currentItems.some((i) => i.produto_id === p.id)) continue;
+      if (!p.created_at || new Date(p.created_at) < cutoff) continue;
+      if (alocacoes[p.id]) { bloqueados++; continue; }
+      elegiveis.push(p);
+    }
+    if (elegiveis.length === 0) {
+      return void toast.info(
+        bloqueados > 0
+          ? `Os produtos recentes já estão em outras maletas (${bloqueados})`
+          : "Nenhum produto recente encontrado nesse período"
+      );
+    }
+    elegiveis.forEach((p) => onAdd(p.id));
+    toast.success(
+      `${elegiveis.length} produto${elegiveis.length > 1 ? "s" : ""} adicionado${elegiveis.length > 1 ? "s" : ""}` +
+        (bloqueados > 0 ? ` — ${bloqueados} já em outras maletas` : "")
+    );
+  }
 
   function processCode(raw: string) {
     const code = raw.trim().toUpperCase();
@@ -155,6 +191,47 @@ function ItemsEditor({
           onClose={() => setScanning(false)}
         />
       )}
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={addAllUnallocated}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/[0.06]"
+          style={{ border: "1px solid rgba(222,218,211,0.15)", color: ACCENT }}
+          title="Adiciona todos os produtos que não estão em nenhuma maleta"
+        >
+          <PackagePlus className="h-3.5 w-3.5" />
+          Adicionar sem maleta
+        </button>
+        <div className="flex items-center gap-1.5 rounded-lg px-2 py-1" style={{ border: "1px solid rgba(222,218,211,0.15)" }}>
+          <Clock className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "rgba(255,255,255,0.4)" }} />
+          <input
+            type="date"
+            value={recentDate}
+            onChange={(e) => setRecentDate(e.target.value)}
+            min="2000-01-01"
+            max="2200-12-31"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "white",
+              fontSize: "12px",
+              outline: "none",
+              colorScheme: "dark",
+            }}
+          />
+          <button
+            type="button"
+            onClick={addAllRecent}
+            className="flex-shrink-0 text-xs font-medium transition-colors hover:opacity-80"
+            style={{ color: ACCENT }}
+            title="Adiciona produtos cadastrados a partir dessa data"
+          >
+            Adicionar recentes
+          </button>
+        </div>
+      </div>
+
       <select
         onChange={(e) => { onAdd(e.target.value); e.target.value = ""; }}
         style={{ ...SELECT_STYLE, width: "auto", minWidth: "200px" }}
@@ -220,7 +297,7 @@ export function MaletasUI({
 }: {
   initial: Maleta[];
   vendedores: Pick<Vendedor, "id" | "nome">[];
-  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url">[];
+  produtos: Pick<Produto, "id" | "nome" | "codigo_barras" | "preco" | "imagem_url" | "imagem_signed_url" | "created_at">[];
   alocacoes: Record<string, Alocacao>;
 }) {
   const [maletas, setMaletas] = useState(initial);
